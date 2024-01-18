@@ -16,8 +16,9 @@ python3 main.py   --version 2 \
                   --num_data_workers 4 \
                   --lr 1e-4 \
                   --batch_size 8 \
-                  --data_path /newstorage4/fkovacev/data/core/Grapher/webnlg-dataset/release_v3.0/en \
-                  --cache_dir /newstorage4/fkovacev/data/core/Grapher/cache \
+                  --data_path /newstorage4/fkovacev/data/core/webnlg-dataset/release_v3.0/en \
+                  --cache_dir /newstorage4/fkovacev/data/core/cache/grapher \
+                  --default_root_dir /newstorage4/fkovacev/data/core/grapher/output \
                   --checkpoint_step_frequency 1000 \
                   --focal_loss_gamma 3 \
                   --dropout_rate 0.5 \
@@ -25,7 +26,7 @@ python3 main.py   --version 2 \
                   --edges_as_classes 0 \
                   --checkpoint_model_id -1 \
                   --default_root_dir output \
-                  --accelerator gpu \
+                  --accelerator cpu \
                   --max_epochs 100 \
                   --num_nodes 1 \
                   --num_sanity_val_steps 0 \

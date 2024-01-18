@@ -9,6 +9,7 @@ import os
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
 from pytorch_lightning.utilities import argparse
 from misc.utils import decode_graph
+import logging
 
 def main(args):
 
@@ -27,7 +28,6 @@ def main(args):
         checkpoint_model_path = os.path.join(args.checkpoint_dir, f"model-step={args.checkpoint_model_id}.ckpt")
 
     if args.run == 'train':
-
         dm = GraphDataModule(tokenizer_class=T5Tokenizer,
                              tokenizer_name=args.pretrained_model,
                              cache_dir=args.cache_dir,

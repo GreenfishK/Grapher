@@ -37,9 +37,6 @@ git clone git@github.com:IBM/Grapher.git
 # navigate to the directory
 cd Grapher
 
-# clone an external repository for reading the data
-git submodule add https://gitlab.com/webnlg/corpus-reader.git corpusreader
-
 # clone another external repositories for scoring the results
 git submodule add https://github.com/WebNLG/WebNLG-Text-to-triples.git WebNLG_Text_to_triples
  ```   
@@ -49,12 +46,8 @@ pip install -r requirements.txt
 ```
 
 ## Data
+We pull the WebNLG 3.0 dataset from hugging face. It is done automatically in the script datasets.py.
 
-WebNLG 3.0 dataset   
- ```bash
-# download the dataset   
-git clone https://gitlab.com/shimorina/webnlg-dataset.git
-```
 
 ## How to train
 There are two scripts to run two versions of the algorithm

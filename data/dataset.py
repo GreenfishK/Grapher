@@ -1,14 +1,12 @@
 import pytorch_lightning as pl
-from corpusreader.benchmark_reader import Benchmark
-from corpusreader.benchmark_reader import select_files
 import os
-import json
 import unicodedata as ud
 import networkx as nx
 from torch.utils.data import DataLoader, Dataset
 import numpy as np
 import torch
-
+from datasets import load_dataset
+import logging
 
 class GraphDataModule(pl.LightningDataModule):
 
@@ -41,9 +39,7 @@ class GraphDataModule(pl.LightningDataModule):
         self.dataset = dataset
 
     def prepareWebNLG(self):
-
         splits = ['train', 'dev', 'test']
-
         for split in splits:
 
             text_file = os.path.join(self.output_path, f'{split}.text')
@@ -51,38 +47,35 @@ class GraphDataModule(pl.LightningDataModule):
             if os.path.exists(text_file) and os.path.exists(graph_file):
                 continue
 
-            b = Benchmark()
+            logging.info("Loading the webnlg dataset from Huggingface")
+            dataset_tuple = load_dataset("web_nlg", name="release_v3.0_en", cache_dir="/mnt/data/core/cache/hug", trust_remote_code=True), 
             if split == 'test':
-                files = [(os.path.join(self.data_path, split), 'semantic-parsing-test-data-with-refs-en.xml')]
+                test_datasets = dataset_tuple[0][split]
+                D = [entry for entry in test_datasets if entry['test_category'] == 'semantic-parsing-test-data-with-refs-en']
             else:
-                files = select_files(os.path.join(self.data_path, split))
-            b.fill_benchmark(files)
-            b.b2json(self.output_path, f'{split}.json')
-            D = json.load(open(os.path.join(self.output_path, f'{split}.json')))
+                D = dataset_tuple[0][split]
 
             normalize = lambda text: ud.normalize('NFKD', text).encode('ascii', 'ignore').decode('ascii')
 
+            logging.info(f"Creating {split}.graph and {split}.text files.")
             triples_to_write = []
             text_to_write = []
             edge_classes_to_write = []
-            for ind, entry in enumerate(D['entries']):
-                triples = entry[str(ind + 1)]['modifiedtripleset']
+            for entry in D:
+                triples = entry['modified_triple_sets']['mtriple_set'][0]
                 proc_triples = []
                 for triple in triples:
-                    obj, rel, sub = triple['object'], triple['property'], triple['subject']
+                    sub, rel, obj = triple.split(' | ')
                     obj = normalize(obj.strip('\"').replace('_', ' '))
                     sub = normalize(sub.strip('\"').replace('_', ' '))
                     proc_triples.append(f'__subject__ {sub} __predicate__ {rel} __object__ {obj}')
                     if split == 'train':
                         edge_classes_to_write.append(rel)
-
-                merged_triples = ' '.join(proc_triples)
-
-                proc_lexs = [normalize(l['lex']) for l in entry[str(ind + 1)]['lexicalisations']]
-
+                proc_lexs = [v for k, v in entry['lex'].items() if k=='text'][0]
                 for lex in proc_lexs:
-                    text_to_write.append(lex)
-                    triples_to_write.append(merged_triples)
+                    text_to_write.append(normalize(lex))
+                    triples_to_write.append(' '.join(proc_triples))
+
 
             with open(text_file, 'w') as f:
                 f.writelines(s + '\n' for s in text_to_write)
@@ -102,10 +95,10 @@ class GraphDataModule(pl.LightningDataModule):
             raise NotImplementedError(f'Unknown dataset {self.dataset}. Only WebNLG dataset has been implemented')
 
     def setup(self, stage=None):
-
         edge_classes_path = os.path.join(self.output_path, 'edge.classes')
 
         if stage == 'fit':
+            logging.info("fitting the model.")
             text_path = os.path.join(self.output_path, 'train.text')
             graph_path = os.path.join(self.output_path, 'train.graph')
             self.dataset_train = GraphDataset(tokenizer=self.tokenizer,
@@ -116,6 +109,7 @@ class GraphDataModule(pl.LightningDataModule):
                                                max_edges=self.max_edges,
                                                edges_as_classes=self.edges_as_classes)
         elif stage == 'validate':
+            logging.info("Validating the model.")
             text_path = os.path.join(self.output_path, 'dev.text')
             graph_path = os.path.join(self.output_path, 'dev.graph')
             self.dataset_dev = GraphDataset(tokenizer=self.tokenizer,
@@ -127,6 +121,7 @@ class GraphDataModule(pl.LightningDataModule):
                                             edges_as_classes=self.edges_as_classes)
 
         elif stage == 'test':
+            logging.info("Testing the model.")
             text_path = os.path.join(self.output_path, 'test.text')
             graph_path = os.path.join(self.output_path, 'test.graph')
             self.dataset_test = GraphDataset(tokenizer=self.tokenizer,
