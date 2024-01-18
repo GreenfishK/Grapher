@@ -48,7 +48,7 @@ class GraphDataModule(pl.LightningDataModule):
                 continue
 
             logging.info("Loading the webnlg dataset from Huggingface")
-            dataset_tuple = load_dataset("web_nlg", name="release_v3.0_en", cache_dir="/mnt/data/core/cache/hug", trust_remote_code=True), 
+            dataset_tuple = load_dataset("web_nlg", name="release_v3.0_en", cache_dir=f"{os.environ['STORAGE_DRIVE']}/data/core/cache/hug", trust_remote_code=True), 
             if split == 'test':
                 test_datasets = dataset_tuple[0][split]
                 D = [entry for entry in test_datasets if entry['test_category'] == 'semantic-parsing-test-data-with-refs-en']
