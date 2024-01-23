@@ -3,7 +3,7 @@
 # TU Wien specific variables
 ##################################################################
 export CUDA_VISIBLE_DEVICES=1
-export STORAGE_DRIVE=/newstorage4/${$USER}
+export STORAGE_DRIVE=/newstorage4/${USER}
 
 ##################################################################vv
 # CUDA variables

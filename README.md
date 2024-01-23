@@ -73,8 +73,9 @@ python3 main.py --run test --version 1 --default_root_dir output --data_path web
 
 ## How to run inference
 ```bash
+export STORAGE_DRIVE=/newstorage4/${USER}
 # run inference on experiment "webnlg_version_1" using latest checkpoint last.ckpt
-python main.py --run inference --version 1 --default_root_dir output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
+python3 main.py --run inference --version 1 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
 ```
 
 ## Results
