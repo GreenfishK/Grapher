@@ -39,7 +39,14 @@ cd Grapher
 
 # clone another external repositories for scoring the results
 git submodule add https://github.com/WebNLG/WebNLG-Text-to-triples.git WebNLG_Text_to_triples
- ```   
+ ```
+
+Install python using conda
+```
+conda create --name data_science python=3.10.6
+conda activate data_science
+```
+
 install requirements
 ```python
 pip install -r requirements.txt
