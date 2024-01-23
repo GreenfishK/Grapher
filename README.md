@@ -63,9 +63,11 @@ There are two scripts to run two versions of the algorithm
 cd scripts
 
 # run Grapher with the edge generation head
+# Description from the paper: The advantage of generation is the ability to construct any edge sequence, including ones unseen during training, at the risk of not matching the target edge token sequence exactly.
 ./train_gen.sh
 
 # run Grapher with the classifier edge head
+# Description from the paper: if the set of possible relationships is fixed and known, the classification head is more efficient and accurate
 ./train_class.sh
 ```
 
