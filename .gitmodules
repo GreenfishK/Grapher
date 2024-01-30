@@ -1,6 +1,4 @@
-[submodule "corpusreader"]
-	path = corpusreader
-	url = https://gitlab.com/webnlg/corpus-reader.git
 [submodule "WebNLG_Text_to_triples"]
 	path = WebNLG_Text_to_triples
 	url = https://github.com/WebNLG/WebNLG-Text-to-triples.git
+	ignore = __pycache__/
