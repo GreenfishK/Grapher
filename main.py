@@ -27,7 +27,7 @@ def main(args):
         checkpoint_model_path = os.path.join(args.checkpoint_dir, f"model-step={args.checkpoint_model_id}.ckpt")
     
     # Specify the GPU device you want to use
-    device = torch.device(f"cuda:{args.cuda_device}") 
+    device = torch.device(f"cuda:{os.environ['CUDA_VISIBLE_DEVICES']}") 
 
     if args.run == 'train':
         dm = GraphDataModule(tokenizer_class=T5Tokenizer,
@@ -142,6 +142,7 @@ def main(args):
 
         assert os.path.exists(checkpoint_model_path), 'Provided checkpoint does not exists, cannot do inference'
 
+        print(device)
         grapher = LitGrapher.load_from_checkpoint(checkpoint_path=checkpoint_model_path)
         grapher.to(device)
         grapher.eval()
@@ -198,7 +199,6 @@ if __name__ == "__main__":
     parser.add_argument("--dropout_rate", type=float, default=0.5)
     parser.add_argument("--num_layers", type=int, default=1)
     parser.add_argument("--eval_dump_only", type=int, default=0)
-    parser.add_argument("--cuda_device", type=int, default=0)
     
     # pytorch lightning params
     parser.add_argument("--default_root_dir", type=str, default="output")
