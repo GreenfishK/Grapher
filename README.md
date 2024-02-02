@@ -88,12 +88,8 @@ python3 main.py --run test --version 1 --default_root_dir output --data_path web
 
 ## How to run inference
 ```bash
-# Load environment variables
-source .env
-
 # run inference classifier edge head (version 1) or alternatively edge generation head (version 2) using latest checkpoint last.ckpt
-# python3 main.py --run inference --version 1 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
-python3 main.py --run inference --version 2 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
+source .env && python3 main.py --run inference --version ${MODEL_VERSION} --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
 ```
 
 ## Results
