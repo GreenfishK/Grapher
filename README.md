@@ -83,9 +83,10 @@ python3 main.py --run test --version 1 --default_root_dir output --data_path web
 ## How to run inference
 ```bash
 export STORAGE_DRIVE=/newstorage4/${USER}
+# export HF_HOME=${STORAGE_DRIVE}/data/core/cache/grapher
 # run inference classifier edge head (version 1) or alternatively edge generation head (version 2) using latest checkpoint last.ckpt
-python3 main.py --run inference --version 1 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
-# python3 main.py --run inference --version 2 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
+# python3 main.py --run inference --version 1 --cuda_device 4 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
+python3 main.py --run inference --version 2 --cuda_device 4 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
 ```
 
 ## Results

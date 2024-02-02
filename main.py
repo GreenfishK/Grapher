@@ -1,15 +1,14 @@
 from data.dataset import GraphDataModule
 from pytorch_lightning import loggers as pl_loggers
-import argparse
 from argparse import ArgumentParser
 from model.litgrapher import LitGrapher
 import pytorch_lightning as pl
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 import os
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
-from pytorch_lightning.utilities import argparse
 from misc.utils import decode_graph
 import logging
+import torch
 
 def main(args):
 
@@ -26,6 +25,9 @@ def main(args):
         checkpoint_model_path = os.path.join(args.checkpoint_dir, 'last.ckpt')
     else:
         checkpoint_model_path = os.path.join(args.checkpoint_dir, f"model-step={args.checkpoint_model_id}.ckpt")
+    
+    # Specify the GPU device you want to use
+    device = torch.device(f"cuda:{args.cuda_device}") 
 
     if args.run == 'train':
         dm = GraphDataModule(tokenizer_class=T5Tokenizer,
@@ -73,6 +75,8 @@ def main(args):
                              focal_loss_gamma=args.focal_loss_gamma,
                              eval_dir=args.eval_dir,
                              lr=args.lr)
+        grapher.to(device)
+        grapher.eval()
 
         if not os.path.exists(checkpoint_model_path):
             checkpoint_model_path = None
@@ -102,6 +106,8 @@ def main(args):
         assert os.path.exists(checkpoint_model_path), 'Provided checkpoint does not exists, cannot run the test'
 
         grapher = LitGrapher.load_from_checkpoint(checkpoint_path=checkpoint_model_path)
+        grapher.to(device)
+        grapher.eval()
 
         dm = GraphDataModule(tokenizer_class=T5Tokenizer,
                              tokenizer_name=grapher.transformer_name,
@@ -137,8 +143,11 @@ def main(args):
         assert os.path.exists(checkpoint_model_path), 'Provided checkpoint does not exists, cannot do inference'
 
         grapher = LitGrapher.load_from_checkpoint(checkpoint_path=checkpoint_model_path)
+        grapher.to(device)
+        grapher.eval()
 
         tokenizer = T5Tokenizer.from_pretrained(grapher.transformer_name, cache_dir=grapher.cache_dir)
+        tokenizer.model_max_length=256
         tokenizer.add_tokens('__no_node__')
         tokenizer.add_tokens('__no_edge__')
         tokenizer.add_tokens('__node_sep__')
@@ -149,6 +158,9 @@ def main(args):
                              return_tensors='pt')
 
         text_input_ids, mask = text_tok['input_ids'], text_tok['attention_mask']
+        # Set the device for input tensors
+        text_input_ids = text_input_ids.to(device)
+        mask = mask.to(device)
 
         _, seq_nodes, _, seq_edges = grapher.model.sample(text_input_ids, mask)
 
@@ -186,6 +198,7 @@ if __name__ == "__main__":
     parser.add_argument("--dropout_rate", type=float, default=0.5)
     parser.add_argument("--num_layers", type=int, default=1)
     parser.add_argument("--eval_dump_only", type=int, default=0)
+    parser.add_argument("--cuda_device", type=int, default=0)
     
     # pytorch lightning params
     parser.add_argument("--default_root_dir", type=str, default="output")
