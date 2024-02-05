@@ -95,7 +95,7 @@ source .env && python3 main.py --run inference --version ${MODEL_VERSION} --defa
 ## Visualize Training Results
 Results can be visualized in Tensorboard
 ```bash
-tensorboard --logdir output
+tensorboard --logdir output --load_fast=false
 ```
 
 ### Citation   
