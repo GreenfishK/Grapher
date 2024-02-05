@@ -92,7 +92,7 @@ python3 main.py --run test --version 1 --default_root_dir output --data_path web
 source .env && python3 main.py --run inference --version ${MODEL_VERSION} --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
 ```
 
-## Results
+## Visualize Training Results
 Results can be visualized in Tensorboard
 ```bash
 tensorboard --logdir output

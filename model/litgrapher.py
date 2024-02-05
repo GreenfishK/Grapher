@@ -109,6 +109,8 @@ class LitGrapher(pl.LightningModule):
 
         loss = compute_loss(self.criterion, logits_nodes, logits_edges, target_nodes,
                             target_edges, self.edges_as_classes, self.focal_loss_gamma)
+        
+        # Create tensorflow log files "events.out.tfevents"
         self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
         
         # Free up GPU memory
@@ -193,13 +195,6 @@ class LitGrapher(pl.LightningModule):
         decodes =  self.eval_step(batch, batch_idx, 'test')
         self.validation_step_outputs.append(decodes)
         return decodes
-
-
-    #def on_validation_epoch_end(self, outputs):
-    #   self.eval_epoch_end(outputs, 'valid')
-
-    #def on_test_epoch_end(self, outputs):
-    #   self.eval_epoch_end(outputs, 'test')
 
     def on_validation_epoch_end(self):
        self.eval_epoch_end('valid')

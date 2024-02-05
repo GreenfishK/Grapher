@@ -30,40 +30,55 @@ def main(args):
     device = torch.device(f"cuda:{os.environ['CUDA_VISIBLE_DEVICES']}") 
 
     if args.run == 'train':
-        dm = GraphDataModule(tokenizer_class=T5Tokenizer,
-                             tokenizer_name=args.pretrained_model,
-                             cache_dir=args.cache_dir,
+        dm = GraphDataModule(cache_dir=args.cache_dir,
                              data_path=args.data_path,
                              dataset=args.dataset,
+                             tokenizer_class=T5Tokenizer,
+                             tokenizer_name=args.pretrained_model,                           
                              batch_size=args.batch_size,
                              num_data_workers=args.num_data_workers,
                              max_nodes=args.max_nodes,
                              max_edges=args.max_edges,
                              edges_as_classes=args.edges_as_classes)
 
+        # Download data and create train, dev and test splits
         dm.prepare_data()
+
+        # Load training data (train.text, train.graph) into GraphDataset
         dm.setup(stage='fit')
+
+        # Load validation data (dev.text, dev.graph) into GraphDataset
         dm.setup(stage='validate')
 
+        # Create plan to save the model periodically
         checkpoint_callback = ModelCheckpoint(
             dirpath=args.checkpoint_dir,
             filename='model-{step}',
             save_last=True,
             save_top_k=-1,
+            # monitor='val_loss',
+            # mode='min', # the training will stop if the validation loss does not improve 
             every_n_train_steps=args.checkpoint_step_frequency,
         )
 
-        grapher = LitGrapher(transformer_class=T5ForConditionalGeneration,
+        if not os.path.exists(checkpoint_model_path):
+            checkpoint_model_path = None
+
+        grapher = LitGrapher(eval_dir=args.eval_dir,
+                             cache_dir=args.cache_dir,
+                             transformer_class=T5ForConditionalGeneration,
                              transformer_name=args.pretrained_model,
                              tokenizer=dm.tokenizer,
-                             cache_dir=args.cache_dir,
+                             dropout_rate=args.dropout_rate,
+                             focal_loss_gamma=args.focal_loss_gamma,
+                             lr=args.lr,
+                             num_layers=args.num_layers,
+                             # Grapher-specific parameters
                              max_nodes=args.max_nodes,
                              max_edges=args.max_edges,
                              edges_as_classes=args.edges_as_classes,
                              default_seq_len_edge=args.default_seq_len_edge,
                              num_classes=len(dm.dataset_train.edge_classes),
-                             dropout_rate=args.dropout_rate,
-                             num_layers=args.num_layers,
                              vocab_size=len(dm.tokenizer.get_vocab()),
                              bos_token_id=dm.tokenizer.pad_token_id,
                              eos_token_id=dm.tokenizer.eos_token_id,
@@ -71,15 +86,10 @@ def main(args):
                              noedge_id=dm.tokenizer.convert_tokens_to_ids('__no_edge__'),
                              node_sep_id=dm.tokenizer.convert_tokens_to_ids('__node_sep__'),
                              noedge_cl=len(dm.dataset_train.edge_classes) - 1,
-                             edge_classes=dm.dataset_train.edge_classes,
-                             focal_loss_gamma=args.focal_loss_gamma,
-                             eval_dir=args.eval_dir,
-                             lr=args.lr)
+                             edge_classes=dm.dataset_train.edge_classes
+                             )
         grapher.to(device)
         grapher.eval()
-
-        if not os.path.exists(checkpoint_model_path):
-            checkpoint_model_path = None
         
         trainer = pl.Trainer(default_root_dir=args.default_root_dir,
                             accelerator=args.accelerator, 
@@ -97,7 +107,6 @@ def main(args):
                             val_check_interval=args.val_check_interval,
                             logger=TB,
                             callbacks=[checkpoint_callback, RichProgressBar(10)])
-        dm.setup(stage='validate')
 
         trainer.fit(model=grapher, datamodule=dm, ckpt_path=checkpoint_model_path)
         
