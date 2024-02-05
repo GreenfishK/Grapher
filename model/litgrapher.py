@@ -110,7 +110,7 @@ class LitGrapher(pl.LightningModule):
         loss = compute_loss(self.criterion, logits_nodes, logits_edges, target_nodes,
                             target_edges, self.edges_as_classes, self.focal_loss_gamma)
         
-        # Create tensorflow log files "events.out.tfevents"
+        # Create tensorflow log files "events.out.tfevents" (I have not verfied it yet)
         self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
         
         # Free up GPU memory
@@ -155,6 +155,7 @@ class LitGrapher(pl.LightningModule):
         decodes = {'text_dec': text_dec, 'dec_target': dec_target, 'dec_pred': dec_pred}
 
         for i, tb_str in enumerate(TB_str):
+            # Log predictions as text for the first batch (rank = global_rank). First batch seems to be random
             self.logger.experiment.add_text(f'{split}_{rank}/{i}', tb_str, iteration)
 
         return decodes
@@ -182,6 +183,7 @@ class LitGrapher(pl.LightningModule):
             return
 
         for k, v in scores.items():
+            # What does this log? Scalars for plots in TensorBoard?
             self.logger.experiment.add_scalar(f'{split}_score/{k}', v, global_step=iteration)
 
         self.log_dict(scores)

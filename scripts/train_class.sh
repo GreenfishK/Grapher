@@ -1,16 +1,4 @@
 #!/usr/bin/env bash
-##################################################################
-# TU Wien specific variables
-##################################################################
-# export CUDA_VISIBLE_DEVICES=1 
-export STORAGE_DRIVE=/newstorage4/${USER}
-
-##################################################################vv
-# CUDA variables
-##################################################################
-# prevents the allocator from splitting blocks larger than this size (in MB).
-export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:1024
-
 cd ../
 python3 main.py   --version 1\
                   --run train \
@@ -38,6 +26,5 @@ python3 main.py   --version 1\
                   --accumulate_grad_batches 10 \
                   --log_every_n_steps 100 \
                   --val_check_interval 1000 \
-                  --cuda_device 1 \
 
 # --detect_anomaly 0 \

@@ -80,10 +80,10 @@ cd scripts
 source .env
 
 # run the test classifier edge head with using latest checkpoint last.ckpt
-python3 main.py --run test --version 1 --default_root_dir output --data_path webnlg-dataset/release_v3.0/en
+python3 main.py --run test --version 1 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en
 
 # run the test classifier edge head using checkpoint at iteration 5000
-python3 main.py --run test --version 1 --default_root_dir output --data_path webnlg-dataset/release_v3.0/en --checkpoint_model_id 5000
+python3 main.py --run test --version 1 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en --checkpoint_model_id 5000
 ```
 
 ## How to run inference
