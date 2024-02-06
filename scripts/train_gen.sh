@@ -11,7 +11,7 @@ python3 main.py   --version 2 \
                   --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en \
                   --cache_dir ${STORAGE_DRIVE}/data/core/cache/grapher \
                   --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output \
-                  --checkpoint_step_frequency 1000 \
+                  --every_n_epochs 1 \
                   --focal_loss_gamma 3 \
                   --dropout_rate 0.5 \
                   --num_layers 2 \

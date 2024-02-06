@@ -21,6 +21,7 @@ def main(args):
 
     TB = pl_loggers.TensorBoardLogger(save_dir=args.default_root_dir, name='', version=args.dataset + '_version_' + args.version, default_hp_metric=False)
 
+    # Start from last checkpoint or a specific checkpoint. 
     if args.checkpoint_model_id < 0:
         checkpoint_model_path = os.path.join(args.checkpoint_dir, 'last.ckpt')
     else:
@@ -54,14 +55,10 @@ def main(args):
         checkpoint_callback = ModelCheckpoint(
             dirpath=args.checkpoint_dir,
             filename='model-{step}',
-            save_last=True, # Saves the last checkpoint when training ends
-            save_top_k=-1,
-            every_n_train_steps=args.checkpoint_step_frequency # This should rather be used when using iterative training which doesn't have any epoch
-            # If monitor is set to None, the callback will save checkpoints regardless of any metric.
-            # If you want to update your checkpoints based on validation loss, only set the monitor parameter
-            # monitor='train_loss', 
-            # mode='min', #     
-            # save_on_train_epoch_end=True # Suggested by PyTorch Lightning in case you are monitoring a training metric
+            every_n_epochs=args.every_n_epochs, # Saves a checkpoint every n epochs 
+            save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
+            save_top_k=-1, # All models are saved
+            save_on_train_epoch_end=False # Check runs at the end of validation
         )
 
         # If three consecutive validation checks yield no improvement, the trainer stops.
@@ -72,7 +69,7 @@ def main(args):
             check_val_every_n_epoch=1,
             patience=3  
         )
-    
+
         if not os.path.exists(checkpoint_model_path):
             checkpoint_model_path = None
 
@@ -210,7 +207,7 @@ if __name__ == "__main__":
     parser.add_argument('--data_path', type=str, default='')
     parser.add_argument('--cache_dir', type=str, default='cache')
     parser.add_argument('--num_data_workers', type=int, default=3)
-    parser.add_argument('--checkpoint_step_frequency', type=int, default=-1)
+    parser.add_argument('--every_n_epochs', type=int, default=-1)
     parser.add_argument('--checkpoint_model_id', type=int, default=-1)
     parser.add_argument('--max_nodes', type=int, default=8)
     parser.add_argument('--max_edges', type=int, default=7)
