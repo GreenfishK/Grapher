@@ -49,32 +49,6 @@ def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edg
     return loss
 
 
-def decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
-    """
-    This function decodes a sequence of tokens into a string.
-    It takes the following arguments:
-        cand: Tensor representing the sequence of tokens.
-        bos_token_id: Token ID for the beginning-of-sequence token.
-        eos_token_id: Token ID for the end-of-sequence token.
-        tokenizer: Tokenizer object for decoding.
-        failed: String to return if decoding fails.
-    It first finds the indices of the beginning-of-sequence and end-of-sequence tokens in the tensor.
-    Then, it decodes the sequence between these tokens using the tokenizer.
-    If decoding fails (no beginning-of-sequence token found), it returns the failed string.
-    """
-    bos_mask = (cand == bos_token_id).nonzero(as_tuple=False)
-    if len(bos_mask) > 0:
-        eos_mask = (cand == eos_token_id).nonzero(as_tuple=False)
-        if len(eos_mask) > 0:
-            s = tokenizer._decode(cand[bos_mask[0] + 1:eos_mask[0]])
-        else:
-            s = failed
-    else:
-        s = failed
-
-    return s
-
-
 def decode_text(tokenizer, text_input_ids, bos_token_id, eos_token_id):
     """
     This function decodes a batch of text sequences represented as token IDs into a list of strings.
@@ -170,7 +144,7 @@ def decode_graph(tokenizer, edge_classes, bnodes, bedges, edges_as_classes, node
                     if noedge_mask[b_ind][i, j] > 0:
                         edge = edges[i, j]
 
-                        s = decode(edge, bos_token_id, eos_token_id, tokenizer, failed_edge)
+                        s = _decode(edge, bos_token_id, eos_token_id, tokenizer, failed_edge)
 
                         # empty or white space
                         if not s or not s.strip():
@@ -197,6 +171,33 @@ def decode_graph(tokenizer, edge_classes, bnodes, bedges, edges_as_classes, node
         triples_decoded.append(tri)
 
     return triples_decoded
+
+
+# Helper function for the decode_graph function.
+def _decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
+    """
+    This function decodes a sequence of tokens into a string.
+    It takes the following arguments:
+        cand: Tensor representing the sequence of tokens.
+        bos_token_id: Token ID for the beginning-of-sequence token.
+        eos_token_id: Token ID for the end-of-sequence token.
+        tokenizer: Tokenizer object for decoding.
+        failed: String to return if decoding fails.
+    It first finds the indices of the beginning-of-sequence and end-of-sequence tokens in the tensor.
+    Then, it decodes the sequence between these tokens using the tokenizer.
+    If decoding fails (no beginning-of-sequence token found), it returns the failed string.
+    """
+    bos_mask = (cand == bos_token_id).nonzero(as_tuple=False)
+    if len(bos_mask) > 0:
+        eos_mask = (cand == eos_token_id).nonzero(as_tuple=False)
+        if len(eos_mask) > 0:
+            s = tokenizer._decode(cand[bos_mask[0] + 1:eos_mask[0]])
+        else:
+            s = failed
+    else:
+        s = failed
+
+    return s
 
 
 def compute_scores(hyp, ref, iteration, eval_dir, split, rank):
