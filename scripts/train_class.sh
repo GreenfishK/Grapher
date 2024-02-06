@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 cd ../
+# Load environment variables
+source .env
+
 python3 main.py   --version 1\
                   --run train \
                   --num_data_workers 4 \

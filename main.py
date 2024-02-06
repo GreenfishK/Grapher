@@ -56,9 +56,9 @@ def main(args):
             filename='model-{step}',
             save_last=True,
             save_top_k=-1,
-            # monitor='val_loss',
+            every_n_train_steps=args.checkpoint_step_frequency
+            # monitor='val_loss', If monitor is set to None, the callback will save checkpoints regardless of any metric.
             # mode='min', # the training will stop if the validation loss does not improve 
-            every_n_train_steps=args.checkpoint_step_frequency,
         )
 
         if not os.path.exists(checkpoint_model_path):

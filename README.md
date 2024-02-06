@@ -59,9 +59,6 @@ We pull the WebNLG 3.0 dataset from hugging face. It is done automatically in th
 ## How to train
 There are two scripts to run two versions of the algorithm
 ```bash
-# Load environment variables
-source .env
-
 # naviagate to scripts directory
 cd scripts
 
@@ -86,17 +83,20 @@ python3 main.py --run test --version 1 --default_root_dir ${STORAGE_DRIVE}/data/
 python3 main.py --run test --version 1 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en --checkpoint_model_id 5000
 ```
 
+## Visualize Training Results
+Results can be visualized in Tensorboard
+```bash
+tensorboard --logdir output --load_fast=false
+```
+
 ## How to run inference
 ```bash
 # run inference classifier edge head (version 1) or alternatively edge generation head (version 2) using latest checkpoint last.ckpt
 source .env && python3 main.py --run inference --version ${MODEL_VERSION} --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
 ```
 
-## Visualize Training Results
-Results can be visualized in Tensorboard
-```bash
-tensorboard --logdir output --load_fast=false
-```
+
+
 
 ### Citation   
 ```

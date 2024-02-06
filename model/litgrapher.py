@@ -118,6 +118,18 @@ class LitGrapher(pl.LightningModule):
         
         return loss
 
+    def validation_step(self, batch, batch_idx):
+        decodes = self.eval_step(batch, batch_idx, 'valid')
+        self.validation_step_outputs.append(decodes)
+        return decodes  
+
+    def test_step(self, batch, batch_idx):
+        decodes =  self.eval_step(batch, batch_idx, 'test')
+        self.validation_step_outputs.append(decodes)
+        return decodes
+
+    # Helpers
+
     def eval_step(self, batch, batch_idx, split):
 
         iteration = self.global_step
@@ -187,16 +199,6 @@ class LitGrapher(pl.LightningModule):
             self.logger.experiment.add_scalar(f'{split}_score/{k}', v, global_step=iteration)
 
         self.log_dict(scores)
-
-    def validation_step(self, batch, batch_idx):
-        decodes = self.eval_step(batch, batch_idx, 'valid')
-        self.validation_step_outputs.append(decodes)
-        return decodes  
-
-    def test_step(self, batch, batch_idx):
-        decodes =  self.eval_step(batch, batch_idx, 'test')
-        self.validation_step_outputs.append(decodes)
-        return decodes
 
     def on_validation_epoch_end(self):
        self.eval_epoch_end('valid')
