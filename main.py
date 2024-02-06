@@ -5,7 +5,7 @@ from model.litgrapher import LitGrapher
 import pytorch_lightning as pl
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 import os
-from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
+from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar, EarlyStopping
 from misc.utils import decode_graph
 import logging
 import torch
@@ -54,13 +54,25 @@ def main(args):
         checkpoint_callback = ModelCheckpoint(
             dirpath=args.checkpoint_dir,
             filename='model-{step}',
-            save_last=True,
+            save_last=True, # Saves the last checkpoint when training ends
             save_top_k=-1,
-            every_n_train_steps=args.checkpoint_step_frequency
-            # monitor='val_loss', If monitor is set to None, the callback will save checkpoints regardless of any metric.
-            # mode='min', # the training will stop if the validation loss does not improve 
+            every_n_train_steps=args.checkpoint_step_frequency # This should rather be used when using iterative training which doesn't have any epoch
+            # If monitor is set to None, the callback will save checkpoints regardless of any metric.
+            # If you want to update your checkpoints based on validation loss, only set the monitor parameter
+            # monitor='train_loss', 
+            # mode='min', #     
+            # save_on_train_epoch_end=True # Suggested by PyTorch Lightning in case you are monitoring a training metric
         )
 
+        # If three consecutive validation checks yield no improvement, the trainer stops.
+        # Validation checks are done every check_val_every_n_epoch epoch.
+        early_stopping_callback = EarlyStopping(
+            monitor="train_loss",
+            mode="min",
+            check_val_every_n_epoch=1,
+            patience=3  
+        )
+    
         if not os.path.exists(checkpoint_model_path):
             checkpoint_model_path = None
 
@@ -89,6 +101,8 @@ def main(args):
                              edge_classes=dm.dataset_train.edge_classes
                              )
         grapher.to(device)
+
+        # disable randomness, dropout, etc...
         grapher.eval()
         
         trainer = pl.Trainer(default_root_dir=args.default_root_dir,
@@ -104,9 +118,10 @@ def main(args):
                             accumulate_grad_batches=args.accumulate_grad_batches,
                             detect_anomaly=args.detect_anomaly,
                             log_every_n_steps=args.log_every_n_steps,
-                            val_check_interval=args.val_check_interval,
+                            check_val_every_n_epoch=args.check_val_every_n_epoch,
                             logger=TB,
-                            callbacks=[checkpoint_callback, RichProgressBar(10)])
+                            callbacks=[checkpoint_callback,early_stopping_callback,
+                                        RichProgressBar(10)])
 
         trainer.fit(model=grapher, datamodule=dm, ckpt_path=checkpoint_model_path)
         
@@ -143,7 +158,7 @@ def main(args):
                             accumulate_grad_batches=args.accumulate_grad_batches,
                             detect_anomaly=args.detect_anomaly,
                             log_every_n_steps=args.log_every_n_steps,
-                            val_check_interval=args.val_check_interval, 
+                            check_val_every_n_epoch=args.check_val_every_n_epoch, 
                             logger=TB)
         trainer.test(grapher, datamodule=dm)
 
@@ -223,7 +238,7 @@ if __name__ == "__main__":
     parser.add_argument("--accumulate_grad_batches", type=int, default=10)
     parser.add_argument("--detect_anomaly", action="store_true", default=False)
     parser.add_argument("--log_every_n_steps", type=int, default=100)
-    parser.add_argument("--val_check_interval", type=int, default=1000)
+    parser.add_argument("--check_val_every_n_epoch", type=int, default=1000)
     parser.add_argument("--inference_input_text", type=str,
                         default='Danielle Harris had a main role in Super Capers, a 98 minute long movie.') 
     

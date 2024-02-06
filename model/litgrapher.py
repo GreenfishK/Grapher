@@ -110,7 +110,7 @@ class LitGrapher(pl.LightningModule):
         loss = compute_loss(self.criterion, logits_nodes, logits_edges, target_nodes,
                             target_edges, self.edges_as_classes, self.focal_loss_gamma)
         
-        # Create tensorflow log files "events.out.tfevents" (I have not verfied it yet)
+        # Which ever loss gets logged here is accessible in the ModelCheckpoint 'monitor' parameter
         self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
         
         # Free up GPU memory

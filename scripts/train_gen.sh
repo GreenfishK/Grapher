@@ -28,7 +28,7 @@ python3 main.py   --version 2 \
                   --limit_test_batches 1.0 \
                   --accumulate_grad_batches 10 \
                   --log_every_n_steps 100 \
-                  --val_check_interval 1000 \
+                  --check_val_every_n_epoch 1 \
 
 # Problems with interpreting 0 as False in main.py
 # --detect_anomaly 0 \
