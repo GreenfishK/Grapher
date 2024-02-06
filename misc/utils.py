@@ -11,14 +11,26 @@ nonode_str = '__no_node__'
 
 
 def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edges, edges_as_classes, focal_loss_gamma):
-
-    # --------- Node Loss ---------
+    """
+    This function computes the loss for the model during training.
+    It takes the following arguments:
+        criterion: Dictionary containing the loss functions for nodes and edges.
+        logits_nodes: Logits for nodes predicted by the model.
+        logits_edges: Logits for edges predicted by the model.
+        target_nodes: Ground truth labels for nodes.
+        target_edges: Ground truth labels for edges.
+        edges_as_classes: Boolean indicating whether edges are treated as classes or not.
+        focal_loss_gamma: Parameter for the focal loss function.
+    It computes the cross-entropy loss for nodes and edges separately and returns their sum as the total loss.
+    """
+    # --------- Node Loss ---   ------
     # shift forward 1 step to create labels
+    # The shift ensures that the lengths of the predicted logits 
+    # and the target labels remain consisten
     labels = torch.cat([target_nodes[:, 1:], torch.zeros_like(target_nodes[:, -2:-1])], 1)
-
     loss_nodes = criterion['ce'](logits_nodes.transpose(1,2), labels).mean()
 
-    # --------- Edge Loss --------
+    # --------- Edge Loss ---------
     if edges_as_classes:
         target_edges = target_edges.permute(2, 0, 1)
         logits_edges = logits_edges.permute(2, 3, 0, 1)
@@ -38,7 +50,18 @@ def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edg
 
 
 def decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
-
+    """
+    This function decodes a sequence of tokens into a string.
+    It takes the following arguments:
+        cand: Tensor representing the sequence of tokens.
+        bos_token_id: Token ID for the beginning-of-sequence token.
+        eos_token_id: Token ID for the end-of-sequence token.
+        tokenizer: Tokenizer object for decoding.
+        failed: String to return if decoding fails.
+    It first finds the indices of the beginning-of-sequence and end-of-sequence tokens in the tensor.
+    Then, it decodes the sequence between these tokens using the tokenizer.
+    If decoding fails (no beginning-of-sequence token found), it returns the failed string.
+    """
     bos_mask = (cand == bos_token_id).nonzero(as_tuple=False)
     if len(bos_mask) > 0:
         eos_mask = (cand == eos_token_id).nonzero(as_tuple=False)
@@ -53,7 +76,17 @@ def decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
 
 
 def decode_text(tokenizer, text_input_ids, bos_token_id, eos_token_id):
-
+    """
+    This function decodes a batch of text sequences represented as token IDs into a list of strings.
+    It takes the following arguments:
+        tokenizer: Tokenizer object for decoding.
+        text_input_ids: Batch of input token IDs.
+        bos_token_id: Token ID for the beginning-of-sequence token.
+        eos_token_id: Token ID for the end-of-sequence token.
+    It iterates over each text sequence in the batch, finds the beginning-of-sequence and end-of-sequence tokens, 
+    and decodes the text between them using the tokenizer.
+    It returns a list of decoded text strings.
+    """
     text_decoded = []
 
     for text in text_input_ids:
@@ -67,7 +100,24 @@ def decode_text(tokenizer, text_input_ids, bos_token_id, eos_token_id):
 
 def decode_graph(tokenizer, edge_classes, bnodes, bedges, edges_as_classes, node_sep_id,
                  max_nodes, noedge_cl, noedge_id, bos_token_id, eos_token_id):
-
+    """
+    This function decodes a batch of graph representations (nodes and edges) into a list of triples.
+    It takes the following arguments:
+        tokenizer: Tokenizer object for decoding.
+        edge_classes: List of edge classes.
+        bnodes: Batch of node sequences represented as token IDs.
+        bedges: Batch of edge sequences represented as token IDs.
+        edges_as_classes: Boolean indicating whether edges are treated as classes or not.
+        node_sep_id: Token ID for separating nodes.
+        max_nodes: Maximum number of nodes in a graph.
+        noedge_cl: Class representing no edge.
+        noedge_id: Token ID representing no edge.
+        bos_token_id: Token ID for the beginning-of-sequence token.
+        eos_token_id: Token ID for the end-of-sequence token.
+    It constructs a directed graph using NetworkX library based on the input node and edge sequences.
+    It decodes the nodes and edges into strings and forms triples.
+    It returns a list of decoded triples for each graph in the batch.
+    """
     if edges_as_classes:
         bedges = bedges.permute(2, 0, 1)
     else:
@@ -150,6 +200,20 @@ def decode_graph(tokenizer, edge_classes, bnodes, bedges, edges_as_classes, node
 
 
 def compute_scores(hyp, ref, iteration, eval_dir, split, rank):
+    """
+    This function computes evaluation scores for generated triples against reference triples.
+    It takes the following arguments:
+        hyp: List of generated triples (hypotheses).
+        ref: List of reference triples.
+        iteration: Iteration or step number of the training process.
+        eval_dir: Directory path where evaluation files will be stored.
+        split: Name of the data split (e.g., 'valid' or 'test').
+        rank: Rank of the process (used for naming files).
+    It first converts the hypotheses and references into RDF format files.
+    It then calls an external evaluation script (Evaluation_script_json.main) to compute evaluation scores based on these RDF files.
+    After obtaining the evaluation scores, it extracts precision, recall, and F1 scores from the result.
+    Finally, it returns a dictionary containing precision, recall, and F1 scores.
+    """
     refs = [[' | '.join(i) for i in t] for t in ref]
     hyps = [[' | '.join(i) for i in t] for t in hyp]
     categories = [' '] * len(refs)
