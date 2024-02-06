@@ -19,7 +19,7 @@ python3 main.py   --version 2 \
                   --checkpoint_model_id -1 \
                   --accelerator gpu \
                   --max_epochs 100 \
-                  --num_nodes 1 \
+                  --num_nodes 2 \
                   --num_sanity_val_steps 0 \
                   --fast_dev_run 0 \
                   --overfit_batches 0 \
@@ -32,7 +32,3 @@ python3 main.py   --version 2 \
 
 # Problems with interpreting 0 as False in main.py
 # --detect_anomaly 0 \
-
-# --checkpoint_step_frequency 1000 \
-# --val_check_interval 1000 \
-# --max_epochs 100 \

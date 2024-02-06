@@ -11,7 +11,7 @@ python3 main.py   --version 1\
                   --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en \
                   --cache_dir ${STORAGE_DRIVE}/data/core/cache/grapher \
                   --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output \
-                  --checkpoint_step_frequency 1000 \
+                  --every_n_epochs 1 \
                   --focal_loss_gamma 3 \
                   --dropout_rate 0.5 \
                   --num_layers 2 \
@@ -28,6 +28,7 @@ python3 main.py   --version 1\
                   --limit_test_batches 1.0 \
                   --accumulate_grad_batches 10 \
                   --log_every_n_steps 100 \
-                  --val_check_interval 1000 \
+                  --check_val_every_n_epoch 1 \
 
+# Problems with interpreting 0 as False in main.py
 # --detect_anomaly 0 \

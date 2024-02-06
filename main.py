@@ -12,20 +12,22 @@ import torch
 
 def main(args):
 
-    args.eval_dir = os.path.join(args.default_root_dir, args.dataset + '_version_' + args.version)
-    args.checkpoint_dir = os.path.join(args.eval_dir, 'checkpoints')
+    # Create directories for validations, tests and checkpoints
+    eval_dir = os.path.join(args.default_root_dir, args.dataset + '_version_' + args.version)
+    checkpoint_dir = os.path.join(eval_dir, 'checkpoints')
 
-    os.makedirs(args.checkpoint_dir, exist_ok=True)
-    os.makedirs(os.path.join(args.eval_dir, 'valid'), exist_ok=True)
-    os.makedirs(os.path.join(args.eval_dir, 'test'), exist_ok=True)
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    os.makedirs(os.path.join(eval_dir, 'valid'), exist_ok=True)
+    os.makedirs(os.path.join(eval_dir, 'test'), exist_ok=True)
 
+    # Logger for TensorBoard
     TB = pl_loggers.TensorBoardLogger(save_dir=args.default_root_dir, name='', version=args.dataset + '_version_' + args.version, default_hp_metric=False)
 
     # Start from last checkpoint or a specific checkpoint. 
     if args.checkpoint_model_id < 0:
-        checkpoint_model_path = os.path.join(args.checkpoint_dir, 'last.ckpt')
+        checkpoint_model_path = os.path.join(checkpoint_dir, 'last.ckpt')
     else:
-        checkpoint_model_path = os.path.join(args.checkpoint_dir, f"model-step={args.checkpoint_model_id}.ckpt")
+        checkpoint_model_path = os.path.join(checkpoint_dir, f"model-step={args.checkpoint_model_id}.ckpt")
     
     # Specify the GPU device you want to use
     device = torch.device(f"cuda:{os.environ['CUDA_VISIBLE_DEVICES']}") 
@@ -51,10 +53,10 @@ def main(args):
         # Load validation data (dev.text, dev.graph) into GraphDataset
         dm.setup(stage='validate')
 
-        # Create plan to save the model periodically
+        # Create plan to save the model periodically   
         checkpoint_callback = ModelCheckpoint(
-            dirpath=args.checkpoint_dir,
-            filename='model-{step}',
+            dirpath=checkpoint_dir,
+            filename='model-{epoch:02d}-{train_loss:.2f}',
             every_n_epochs=args.every_n_epochs, # Saves a checkpoint every n epochs 
             save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
             save_top_k=-1, # All models are saved
@@ -63,6 +65,7 @@ def main(args):
 
         # If three consecutive validation checks yield no improvement, the trainer stops.
         # Validation checks are done every check_val_every_n_epoch epoch.
+        # Prevents overfitting
         early_stopping_callback = EarlyStopping(
             monitor="train_loss",
             mode="min",
@@ -73,7 +76,7 @@ def main(args):
         if not os.path.exists(checkpoint_model_path):
             checkpoint_model_path = None
 
-        grapher = LitGrapher(eval_dir=args.eval_dir,
+        grapher = LitGrapher(eval_dir=eval_dir,
                              cache_dir=args.cache_dir,
                              transformer_class=T5ForConditionalGeneration,
                              transformer_name=args.pretrained_model,
@@ -163,7 +166,7 @@ def main(args):
 
         assert os.path.exists(checkpoint_model_path), 'Provided checkpoint does not exists, cannot do inference'
 
-        print(device)
+        logging.info(device)
         grapher = LitGrapher.load_from_checkpoint(checkpoint_path=checkpoint_model_path)
         grapher.to(device)
         grapher.eval()
@@ -235,7 +238,7 @@ if __name__ == "__main__":
     parser.add_argument("--accumulate_grad_batches", type=int, default=10)
     parser.add_argument("--detect_anomaly", action="store_true", default=False)
     parser.add_argument("--log_every_n_steps", type=int, default=100)
-    parser.add_argument("--check_val_every_n_epoch", type=int, default=1000)
+    parser.add_argument("--check_val_every_n_epoch", type=int, default=1)
     parser.add_argument("--inference_input_text", type=str,
                         default='Danielle Harris had a main role in Super Capers, a 98 minute long movie.') 
     
