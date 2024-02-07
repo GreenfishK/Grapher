@@ -7,7 +7,7 @@ python3 main.py   --version 2 \
                   --run train \
                   --num_data_workers 4 \
                   --lr 1e-4 \
-                  --batch_size 8 \
+                  --batch_size 4 \
                   --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en \
                   --cache_dir ${STORAGE_DRIVE}/data/core/cache/grapher \
                   --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output \
@@ -19,7 +19,7 @@ python3 main.py   --version 2 \
                   --checkpoint_model_id -1 \
                   --accelerator gpu \
                   --max_epochs 100 \
-                  --num_nodes 2 \
+                  --num_nodes 1 \
                   --num_sanity_val_steps 0 \
                   --fast_dev_run 0 \
                   --overfit_batches 0 \

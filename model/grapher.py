@@ -33,25 +33,7 @@ class Grapher(nn.Module):
         else:
             self.edges = EdgesGen(self.hidden_dim, vocab_size, bos_token_id)
 
-    def split_nodes(self, output_ids, features):
-
-        # features: batch_size x seq_len x hidden_dim
-        # output_ids: batch_size x seq_len
-
-        batch_size, _ = output_ids.size()
-        split_features = torch.zeros((self.max_nodes, batch_size, self.hidden_dim), device=features.device, dtype=features.dtype)  # num_nodes X batch_size X hidden_dim
-
-        for n in range(self.max_nodes):
-            mask_node_n = ((torch.cumsum((output_ids == self.node_sep_id), 1) == n) & (output_ids != self.node_sep_id)).unsqueeze(2)
-            features_node_n = features*mask_node_n
-            sum_features_node_n = torch.cumsum(features_node_n, 1)[:, -1]
-            num_tokens_node_n = torch.sum(mask_node_n, 1)
-            num_tokens_node_n[num_tokens_node_n == 0] = 1
-            ave_features_node_n = sum_features_node_n / num_tokens_node_n
-            split_features[n] = ave_features_node_n
-
-        return split_features
-
+    # Override
     def forward(self, text, text_mask, target_nodes, target_nodes_mask, target_edges):
 
         # NODES
@@ -76,6 +58,25 @@ class Grapher(nn.Module):
             logits_edges = self.edges(features, seq_len_edge)
 
         return logits_nodes, logits_edges
+    
+    def split_nodes(self, output_ids, features):
+
+        # features: batch_size x seq_len x hidden_dim
+        # output_ids: batch_size x seq_len
+
+        batch_size, _ = output_ids.size()
+        split_features = torch.zeros((self.max_nodes, batch_size, self.hidden_dim), device=features.device, dtype=features.dtype)  # num_nodes X batch_size X hidden_dim
+
+        for n in range(self.max_nodes):
+            mask_node_n = ((torch.cumsum((output_ids == self.node_sep_id), 1) == n) & (output_ids != self.node_sep_id)).unsqueeze(2)
+            features_node_n = features*mask_node_n
+            sum_features_node_n = torch.cumsum(features_node_n, 1)[:, -1]
+            num_tokens_node_n = torch.sum(mask_node_n, 1)
+            num_tokens_node_n[num_tokens_node_n == 0] = 1
+            ave_features_node_n = sum_features_node_n / num_tokens_node_n
+            split_features[n] = ave_features_node_n
+
+        return split_features
 
     def sample(self, text, text_mask):
 
@@ -118,7 +119,8 @@ class EdgesGen(nn.Module):
         self.vocab_size = vocab_size
         self.bos_token = bos_token
         self.edgeDecoder = GRUDecoder(hidden_dim, vocab_size)
-
+    
+    # Override
     def forward(self, features, seq_len):
 
         # features: num_nodes X batch_size X hidden_dim
@@ -163,6 +165,7 @@ class GRUDecoder(nn.Module):
 
         self.embedding = nn.Embedding(vocab_size, hidden_size)
 
+    # Override
     def forward(self, x, hidden):
 
         # x: bsize
@@ -201,6 +204,7 @@ class EdgesClass(nn.Module):
             self.layers.add_module(f'dropout{l}', nn.Dropout(dropout_rate))
         self.layers.add_module('last', nn.Linear(dim, num_classes))
 
+    # Override
     def forward(self, features):
 
         # features: num_nodes X batch_size X hidden_dim

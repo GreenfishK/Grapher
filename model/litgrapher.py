@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 import os
 from model.grapher import Grapher
+import logging
 
 
 def sorted_ls(path):
@@ -90,7 +91,7 @@ class LitGrapher(pl.LightningModule):
         self.lr = lr
         self.validation_step_outputs = [] 
 
-
+    # Override
     def training_step(self, batch, batch_idx):
 
         # target_nodes: batch_size X seq_len_node
@@ -112,45 +113,67 @@ class LitGrapher(pl.LightningModule):
         
         # Which ever loss gets logged here is accessible in the ModelCheckpoint 'monitor' parameter
         self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
-        
+
         # Free up GPU memory
         torch.cuda.empty_cache()
         
         return loss
 
+    # Override
     def validation_step(self, batch, batch_idx):
+        logging.info(f"Validating batch: {batch_idx}")
+             
         decodes = self.eval_step(batch, batch_idx, 'valid')
         self.validation_step_outputs.append(decodes)
         return decodes  
-
+    
+    def on_validation_epoch_end(self):
+       self.eval_epoch_end('valid')
+       logging.info("Validation epoch ended")
+    
+    # Override
     def test_step(self, batch, batch_idx):
+        logging.info(f"Testing batch: {batch_idx}")
+
         decodes =  self.eval_step(batch, batch_idx, 'test')
         self.validation_step_outputs.append(decodes)
         return decodes
+    
+    def on_test_epoch_end(self):
+        self.eval_epoch_end('test')
+        logging.info("Test epoch ended")
 
-    # Helpers
+    # ------------------- Helpers -------------------
 
     def eval_step(self, batch, batch_idx, split):
 
-        iteration = self.global_step
-        rank = self.global_rank
-
+        # Unpack batch
         text_input_ids, text_input_attn_mask, target_nodes, target_nodes_mask, target_edges = batch
 
+        # Generate predictions
         logits_nodes, seq_nodes, logits_edges, seq_edges = self.model.sample(text_input_ids, text_input_attn_mask)
 
+        # Decode input text, target graph and predicted graphs
         text_dec = decode_text(self.tokenizer, text_input_ids, self.bos_token_id, self.eos_token_id)
-
-        TB_str = []
-
         dec_target = decode_graph(self.tokenizer, self.edge_classes, target_nodes, target_edges, self.edges_as_classes,
                                   self.node_sep_id, self.max_nodes, self.noedge_cl, self.noedge_id,
                                   self.bos_token_id, self.eos_token_id)
-
         dec_pred = decode_graph(self.tokenizer, self.edge_classes, seq_nodes, seq_edges, self.edges_as_classes,
                                 self.node_sep_id, self.max_nodes, self.noedge_cl, self.noedge_id,
                                 self.bos_token_id, self.eos_token_id)
+        
+        # Prepare decoded outputs
+        decodes = {'text_dec': text_dec, 'dec_target': dec_target, 'dec_pred': dec_pred}
+        
+        # Compute loss
+        loss = compute_loss(self.criterion, logits_nodes, logits_edges, target_nodes,
+                            target_edges, self.edges_as_classes, self.focal_loss_gamma)
+        
+        # Which ever loss gets logged here is accessible in the ModelCheckpoint 'monitor' parameter
+        self.log('val_loss', loss, on_step=True, on_epoch=True, logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
 
+        # Prepare strings for TensorBoard logging
+        TB_str = []
         if batch_idx == 0:
             for b_i in range(len(text_dec)):
                 # ---- ground truth ----
@@ -163,19 +186,16 @@ class LitGrapher(pl.LightningModule):
                         + '-' * 40 + 'target' + '-' * 40 + '<br/>' + gt + '<br/>' \
                         + '-' * 40 + 'predicted' + '-' * 20 + '<br/>' + pr + '<br/>'
                 TB_str.append(strng)
-
-        decodes = {'text_dec': text_dec, 'dec_target': dec_target, 'dec_pred': dec_pred}
-
+        
+        # Log predictions as text for the first batch (rank = global_rank). First batch seems to be random
+        iteration = self.global_step
+        rank = self.global_rank
         for i, tb_str in enumerate(TB_str):
-            # Log predictions as text for the first batch (rank = global_rank). First batch seems to be random
             self.logger.experiment.add_text(f'{split}_{rank}/{i}', tb_str, iteration)
 
         return decodes
 
     def eval_epoch_end(self, split):
-
-        iteration = self.global_step
-        rank = self.global_rank
 
         dec_target_all = []
         dec_pred_all = []
@@ -189,6 +209,8 @@ class LitGrapher(pl.LightningModule):
         dec_target_all = [tr[:10] for tr in dec_target_all]
 
         # hack to avoid crashing the program if evaluation fails
+        iteration = self.global_step
+        rank = self.global_rank
         try:
             scores = compute_scores(dec_pred_all, dec_target_all, iteration, self.eval_dir, split, rank)
         except Exception:
@@ -199,12 +221,6 @@ class LitGrapher(pl.LightningModule):
             self.logger.experiment.add_scalar(f'{split}_score/{k}', v, global_step=iteration)
 
         self.log_dict(scores)
-
-    def on_validation_epoch_end(self):
-       self.eval_epoch_end('valid')
-
-    def on_test_epoch_end(self):
-        self.eval_epoch_end('test')
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), self.lr)

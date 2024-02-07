@@ -30,7 +30,9 @@ def main(args):
         checkpoint_model_path = os.path.join(checkpoint_dir, f"model-step={args.checkpoint_model_id}.ckpt")
     
     # Specify the GPU device you want to use
-    device = torch.device(f"cuda:{os.environ['CUDA_VISIBLE_DEVICES']}") 
+
+    if torch.cuda.device_count() <= 1:
+        device = torch.device(f"cuda:{os.environ['CUDA_VISIBLE_DEVICES']}") 
 
     if args.run == 'train':
         dm = GraphDataModule(cache_dir=args.cache_dir,
@@ -56,20 +58,21 @@ def main(args):
         # Create plan to save the model periodically   
         checkpoint_callback = ModelCheckpoint(
             dirpath=checkpoint_dir,
-            filename='model-{epoch:02d}-{train_loss:.2f}',
+            filename='model-{epoch:02d}-{train_loss:.2f}-{val_loss:.2f}',
             every_n_epochs=args.every_n_epochs, # Saves a checkpoint every n epochs 
             save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
-            save_top_k=-1, # All models are saved
-            save_on_train_epoch_end=False # Check runs at the end of validation
+            save_on_train_epoch_end=False, # Check runs at the end of validation
+            mode="min",
+            monitor="train_loss",
+            save_top_k=3, # Save top 3
         )
 
         # If three consecutive validation checks yield no improvement, the trainer stops.
         # Validation checks are done every check_val_every_n_epoch epoch.
-        # Prevents overfitting
+        # Monitor validation loss to prevent overfitting
         early_stopping_callback = EarlyStopping(
-            monitor="train_loss",
+            monitor="val_loss",
             mode="min",
-            check_val_every_n_epoch=1,
             patience=3  
         )
 
@@ -90,17 +93,21 @@ def main(args):
                              max_edges=args.max_edges,
                              edges_as_classes=args.edges_as_classes,
                              default_seq_len_edge=args.default_seq_len_edge,
-                             num_classes=len(dm.dataset_train.edge_classes),
+                             # Tokenizer params
                              vocab_size=len(dm.tokenizer.get_vocab()),
                              bos_token_id=dm.tokenizer.pad_token_id,
                              eos_token_id=dm.tokenizer.eos_token_id,
                              nonode_id=dm.tokenizer.convert_tokens_to_ids('__no_node__'),
                              noedge_id=dm.tokenizer.convert_tokens_to_ids('__no_edge__'),
                              node_sep_id=dm.tokenizer.convert_tokens_to_ids('__node_sep__'),
+                             # Edge classification
                              noedge_cl=len(dm.dataset_train.edge_classes) - 1,
-                             edge_classes=dm.dataset_train.edge_classes
-                             )
-        grapher.to(device)
+                             edge_classes=dm.dataset_train.edge_classes,
+                             num_classes=len(dm.dataset_train.edge_classes))
+        
+        # Wrap the model with DataParallel
+        if torch.cuda.device_count() <= 1:
+            grapher.to(device)
 
         # disable randomness, dropout, etc...
         grapher.eval()
@@ -108,7 +115,6 @@ def main(args):
         trainer = pl.Trainer(default_root_dir=args.default_root_dir,
                             accelerator=args.accelerator, 
                             max_epochs=args.max_epochs,
-                            num_nodes=args.num_nodes,
                             num_sanity_val_steps=args.num_sanity_val_steps,
                             fast_dev_run=args.fast_dev_run,
                             overfit_batches=args.overfit_batches,
@@ -121,7 +127,8 @@ def main(args):
                             check_val_every_n_epoch=args.check_val_every_n_epoch,
                             logger=TB,
                             callbacks=[checkpoint_callback,early_stopping_callback,
-                                        RichProgressBar(10)])
+                                        RichProgressBar(10)],
+                            num_nodes=args.num_nodes)
 
         trainer.fit(model=grapher, datamodule=dm, ckpt_path=checkpoint_model_path)
         
@@ -148,7 +155,6 @@ def main(args):
         trainer = pl.Trainer(default_root_dir=args.default_root_dir,
                             accelerator=args.accelerator, 
                             max_epochs=args.max_epochs,
-                            num_nodes=args.num_nodes,
                             num_sanity_val_steps=args.num_sanity_val_steps,
                             fast_dev_run=args.fast_dev_run,
                             overfit_batches=args.overfit_batches,
@@ -159,7 +165,8 @@ def main(args):
                             detect_anomaly=args.detect_anomaly,
                             log_every_n_steps=args.log_every_n_steps,
                             check_val_every_n_epoch=args.check_val_every_n_epoch, 
-                            logger=TB)
+                            logger=TB,
+                            num_nodes=args.num_nodes)
         trainer.test(grapher, datamodule=dm)
 
     else: # single inference
