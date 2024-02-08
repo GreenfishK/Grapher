@@ -30,11 +30,11 @@ def main(args):
         checkpoint_model_path = os.path.join(checkpoint_dir, f"model-step={args.checkpoint_model_id}.ckpt")
     
     # Specify the GPU device you want to use
-
     if torch.cuda.device_count() <= 1:
         device = torch.device(f"cuda:{os.environ['CUDA_VISIBLE_DEVICES']}") 
 
     if args.run == 'train':
+        # -------------------- Data module ---------------------
         dm = GraphDataModule(cache_dir=args.cache_dir,
                              data_path=args.data_path,
                              dataset=args.dataset,
@@ -55,30 +55,7 @@ def main(args):
         # Load validation data (dev.text, dev.graph) into GraphDataset
         dm.setup(stage='validate')
 
-        # Create plan to save the model periodically   
-        checkpoint_callback = ModelCheckpoint(
-            dirpath=checkpoint_dir,
-            filename='model-{epoch:02d}-{train_loss:.2f}-{val_loss:.2f}',
-            every_n_epochs=args.every_n_epochs, # Saves a checkpoint every n epochs 
-            save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
-            save_on_train_epoch_end=False, # Check runs at the end of validation
-            mode="min",
-            monitor="train_loss",
-            save_top_k=3, # Save top 3
-        )
-
-        # If three consecutive validation checks yield no improvement, the trainer stops.
-        # Validation checks are done every check_val_every_n_epoch epoch.
-        # Monitor validation loss to prevent overfitting
-        early_stopping_callback = EarlyStopping(
-            monitor="val_loss",
-            mode="min",
-            patience=3  
-        )
-
-        if not os.path.exists(checkpoint_model_path):
-            checkpoint_model_path = None
-
+        # -------------------- Model ---------------------
         grapher = LitGrapher(eval_dir=eval_dir,
                              cache_dir=args.cache_dir,
                              transformer_class=T5ForConditionalGeneration,
@@ -111,6 +88,28 @@ def main(args):
 
         # disable randomness, dropout, etc...
         grapher.eval()
+
+        # -------------------- Trainer ---------------------
+        # Create plan to save the model periodically   
+        checkpoint_callback = ModelCheckpoint(
+            dirpath=checkpoint_dir,
+            filename='model-{epoch:02d}-{train_loss:.2f}-{val_loss:.2f}',
+            every_n_epochs=args.every_n_epochs, # Saves a checkpoint every n epochs 
+            save_on_train_epoch_end=False, # Checkpointing runs at the end of validation
+            save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
+            save_top_k=3, # Save top 3
+            mode="min",
+            monitor="train_loss",
+        )
+
+        # If three consecutive validation checks yield no improvement, the trainer stops.
+        # Validation checks are done every check_val_every_n_epoch epoch.
+        # Monitor validation loss to prevent overfitting
+        early_stopping_callback = EarlyStopping(
+            monitor="val_loss_epoch",
+            mode="min",
+            patience=3  
+        )
         
         trainer = pl.Trainer(default_root_dir=args.default_root_dir,
                             accelerator=args.accelerator, 
@@ -130,7 +129,8 @@ def main(args):
                                         RichProgressBar(10)],
                             num_nodes=args.num_nodes)
 
-        trainer.fit(model=grapher, datamodule=dm, ckpt_path=checkpoint_model_path)
+        trainer.fit(model=grapher, datamodule=dm,
+                    ckpt_path=checkpoint_model_path if os.path.exists(checkpoint_model_path) else None)
         
     elif args.run == 'test':
 

@@ -102,11 +102,8 @@ class LitGrapher(pl.LightningModule):
         # logits_nodes: batch_size X seq_len_node X vocab_size
         # logits_edges: num_nodes X num_nodes X batch_size X seq_len_edge X vocab_size [FULL]
         # logits_edges: num_nodes X num_nodes X batch_size X num_classes [CLASSES]
-        logits_nodes, logits_edges= self.model(text_input_ids,
-                                               text_input_attn_mask,
-                                               target_nodes,
-                                               target_nodes_mask,
-                                               target_edges)
+        logits_nodes, logits_edges = self.model(text_input_ids, text_input_attn_mask,
+                                                 target_nodes, target_nodes_mask, target_edges)
 
         loss = compute_loss(self.criterion, logits_nodes, logits_edges, target_nodes,
                             target_edges, self.edges_as_classes, self.focal_loss_gamma)
@@ -122,10 +119,9 @@ class LitGrapher(pl.LightningModule):
     # Override
     def validation_step(self, batch, batch_idx):
         logging.info(f"Validating batch: {batch_idx}")
-             
-        decodes = self.eval_step(batch, batch_idx, 'valid')
-        self.validation_step_outputs.append(decodes)
-        return decodes  
+        val_outputs = self.eval_step(batch, batch_idx, 'valid')
+        self.validation_step_outputs.append(val_outputs)
+        return val_outputs  
     
     def on_validation_epoch_end(self):
        self.eval_epoch_end('valid')
@@ -134,17 +130,23 @@ class LitGrapher(pl.LightningModule):
     # Override
     def test_step(self, batch, batch_idx):
         logging.info(f"Testing batch: {batch_idx}")
-
-        decodes =  self.eval_step(batch, batch_idx, 'test')
-        self.validation_step_outputs.append(decodes)
-        return decodes
+        val_outputs =  self.eval_step(batch, batch_idx, 'test')
+        self.validation_step_outputs.append(val_outputs)
+        return val_outputs
     
     def on_test_epoch_end(self):
         self.eval_epoch_end('test')
         logging.info("Test epoch ended")
 
-    # ------------------- Helpers -------------------
+    # Override
+    def configure_optimizers(self):
+        optimizer = torch.optim.AdamW(self.parameters(), self.lr)
+        return optimizer
 
+#################################################
+# ------------------- Helpers -------------------
+#################################################
+    # For validation and testing
     def eval_step(self, batch, batch_idx, split):
 
         # Unpack batch
@@ -153,6 +155,7 @@ class LitGrapher(pl.LightningModule):
         # Generate predictions
         logits_nodes, seq_nodes, logits_edges, seq_edges = self.model.sample(text_input_ids, text_input_attn_mask)
 
+        # ------------------- Val 1 - Predictions as text -------------------
         # Decode input text, target graph and predicted graphs
         text_dec = decode_text(self.tokenizer, text_input_ids, self.bos_token_id, self.eos_token_id)
         dec_target = decode_graph(self.tokenizer, self.edge_classes, target_nodes, target_edges, self.edges_as_classes,
@@ -162,16 +165,6 @@ class LitGrapher(pl.LightningModule):
                                 self.node_sep_id, self.max_nodes, self.noedge_cl, self.noedge_id,
                                 self.bos_token_id, self.eos_token_id)
         
-        # Prepare decoded outputs
-        decodes = {'text_dec': text_dec, 'dec_target': dec_target, 'dec_pred': dec_pred}
-        
-        # Compute loss
-        loss = compute_loss(self.criterion, logits_nodes, logits_edges, target_nodes,
-                            target_edges, self.edges_as_classes, self.focal_loss_gamma)
-        
-        # Which ever loss gets logged here is accessible in the ModelCheckpoint 'monitor' parameter
-        self.log('val_loss', loss, on_step=True, on_epoch=True, logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
-
         # Prepare strings for TensorBoard logging
         TB_str = []
         if batch_idx == 0:
@@ -193,16 +186,33 @@ class LitGrapher(pl.LightningModule):
         for i, tb_str in enumerate(TB_str):
             self.logger.experiment.add_text(f'{split}_{rank}/{i}', tb_str, iteration)
 
-        return decodes
+        # ------------------- Val 2 - Loss for early stopping -------------------
+        # Compute loss
+        val_loss = compute_loss(self.criterion, logits_nodes, logits_edges, target_nodes,
+                            target_edges, self.edges_as_classes, self.focal_loss_gamma)
+        
+        self.log('val_loss', val_loss, on_step=True, on_epoch=True, logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
 
+        # -----------------------------------------------------------------------
+        # Prepare decoded outputs and focal loss
+        # TODO: Only return decodes if the above line truly aggregates val_loss on epoch level and it can be accessed in EarlyStopping
+        val_outputs = {'decodes': {'text_dec': text_dec, 'dec_target': dec_target, 'dec_pred': dec_pred}, 'val_loss': val_loss} 
+
+        return val_outputs
+
+    # For validation and testing
     def eval_epoch_end(self, split):
 
         dec_target_all = []
         dec_pred_all = []
+        # TODO: Remove this if the val loss can be logged on epoch level in validation_step
+        # val_losses = [] 
 
         for out in self.validation_step_outputs:
-            dec_target_all += out['dec_target']
-            dec_pred_all += out['dec_pred']
+            dec_target_all += out['decodes']['dec_target']
+            dec_pred_all += out['decodes']['dec_pred']
+            # TODO: Remove this if the val loss can be logged on epoch level in validation_step
+            #val_losses.append(out['val_loss'])
 
         # make sure number of paths is smaller than 10
         dec_pred_all = [tr[:10] for tr in dec_pred_all]
@@ -220,8 +230,9 @@ class LitGrapher(pl.LightningModule):
             # What does this log? Scalars for plots in TensorBoard?
             self.logger.experiment.add_scalar(f'{split}_score/{k}', v, global_step=iteration)
 
-        self.log_dict(scores)
+        # TODO: Remove this if the val loss can be logged on epoch level in validation_step
+        # Logging the average validation loss
+        #val_loss_avg = torch.stack([x for x in val_losses]).mean() 
+        #self.log('avg_val_loss', val_loss_avg)   
 
-    def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.parameters(), self.lr)
-        return optimizer
+        self.log_dict(scores)

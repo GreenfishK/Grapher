@@ -98,7 +98,7 @@ class GraphDataModule(pl.LightningDataModule):
         edge_classes_path = os.path.join(self.output_path, 'edge.classes')
 
         if stage == 'fit':
-            logging.info("fitting the model.")
+            logging.info("Load training data into GraphDataset.")
             text_path = os.path.join(self.output_path, 'train.text')
             graph_path = os.path.join(self.output_path, 'train.graph')
             self.dataset_train = GraphDataset(tokenizer=self.tokenizer,
@@ -109,7 +109,7 @@ class GraphDataModule(pl.LightningDataModule):
                                                max_edges=self.max_edges,
                                                edges_as_classes=self.edges_as_classes)
         elif stage == 'validate':
-            logging.info("Validating the model.")
+            logging.info("Load validation data (dev) into GraphDataset.")
             text_path = os.path.join(self.output_path, 'dev.text')
             graph_path = os.path.join(self.output_path, 'dev.graph')
             self.dataset_dev = GraphDataset(tokenizer=self.tokenizer,
