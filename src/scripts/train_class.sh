@@ -3,11 +3,11 @@ cd ../
 # Load environment variables
 source .env
 
-python3 main.py   --version 2 \
+python3 main.py   --version 1\
                   --run train \
                   --num_data_workers 4 \
                   --lr 1e-4 \
-                  --batch_size 24 \
+                  --batch_size 20 \
                   --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en \
                   --cache_dir ${STORAGE_DRIVE}/data/core/cache/grapher \
                   --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output \
@@ -15,7 +15,7 @@ python3 main.py   --version 2 \
                   --focal_loss_gamma 3 \
                   --dropout_rate 0.5 \
                   --num_layers 2 \
-                  --edges_as_classes 0 \
+                  --edges_as_classes 1 \
                   --checkpoint_model_id -1 \
                   --accelerator gpu \
                   --max_epochs 100 \

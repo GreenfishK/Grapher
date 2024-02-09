@@ -1,10 +1,10 @@
+from model.grapher import Grapher
+from misc.utils import compute_loss, decode_text, decode_graph, compute_scores
 import torch
 import pytorch_lightning as pl
-from misc.utils import compute_loss, decode_text, decode_graph, compute_scores
 import torch.nn.functional as F
 import torch.nn as nn
 import os
-from model.grapher import Grapher
 import logging
 
 

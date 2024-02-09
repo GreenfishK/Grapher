@@ -43,6 +43,7 @@ git clone git@github.com:IBM/Grapher.git
 cd Grapher
 
 # clone another external repositories for scoring the results
+cd src
 git submodule add https://github.com/WebNLG/WebNLG-Text-to-triples.git WebNLG_Text_to_triples
  ```
 
@@ -54,7 +55,7 @@ We pull the WebNLG 3.0 dataset from hugging face. It is done automatically in th
 There are two scripts to run two versions of the algorithm
 ```bash
 # naviagate to scripts directory
-cd scripts
+cd src/scripts
 
 # run Grapher with the edge generation head
 # Description from the paper: The advantage of generation is the ability to construct any edge sequence, including ones unseen during training, at the risk of not matching the target edge token sequence exactly.
@@ -67,11 +68,8 @@ cd scripts
 
 ## How to test
 ```bash
-# Load environment variables
-source .env
-
 # run the test classifier edge head with using latest checkpoint last.ckpt
-python3 main.py --run test --version 1 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en
+source .env && python3 main.py --run test --version 1 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en
 
 # run the test classifier edge head using checkpoint at iteration 5000
 # Note: This does not work currently because the filename of the checkpoints has been updated

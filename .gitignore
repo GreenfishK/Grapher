@@ -1,6 +1,6 @@
-WebNLG_Text_to_triples/
-output/
-model/__pycache__/
-data/__pycache__/
-misc/__pycache__/
+src/WebNLG_Text_to_triples/
+src/model/__pycache__/
+src/dataset/__pycache__/
+src/misc/__pycache__/
+src/engines/__pycache__/
 .env
