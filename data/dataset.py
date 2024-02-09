@@ -23,7 +23,9 @@ class GraphDataModule(pl.LightningDataModule):
                  edges_as_classes):
         super().__init__()
 
-        self.tokenizer = tokenizer_class.from_pretrained(tokenizer_name, cache_dir=cache_dir)
+        # 150 as max tokens was set based on what was found in the grapher.Grapher.sample function
+        self.tokenizer = tokenizer_class.from_pretrained(tokenizer_name, cache_dir=cache_dir,
+                                                         model_max_length=150, legacy=True)
         self.tokenizer.add_tokens('__no_node__')
         self.tokenizer.add_tokens('__no_edge__')
         self.tokenizer.add_tokens('__node_sep__')

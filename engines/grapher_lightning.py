@@ -97,11 +97,14 @@ class LitGrapher(pl.LightningModule):
         # target_nodes: batch_size X seq_len_node
         # target_edges: num_nodes X num_nodes X batch_size X seq_len_edge [FULL]
         # target_edges: batch_size X num_nodes X num_nodes [CLASSES]
+        # Unpack batch
         text_input_ids, text_input_attn_mask, target_nodes, target_nodes_mask, target_edges = batch
 
         # logits_nodes: batch_size X seq_len_node X vocab_size
         # logits_edges: num_nodes X num_nodes X batch_size X seq_len_edge X vocab_size [FULL]
         # logits_edges: num_nodes X num_nodes X batch_size X num_classes [CLASSES]
+        # Generate (unnormalized) predictions for nodes and edges
+        # forward function of Grapher
         logits_nodes, logits_edges = self.model(text_input_ids, text_input_attn_mask,
                                                  target_nodes, target_nodes_mask, target_edges)
 
@@ -118,7 +121,6 @@ class LitGrapher(pl.LightningModule):
 
     # Override
     def validation_step(self, batch, batch_idx):
-        logging.info(f"Validating batch: {batch_idx}")
         val_outputs = self.eval_step(batch, batch_idx, 'valid')
         self.validation_step_outputs.append(val_outputs)
         return val_outputs  
@@ -129,7 +131,6 @@ class LitGrapher(pl.LightningModule):
     
     # Override
     def test_step(self, batch, batch_idx):
-        logging.info(f"Testing batch: {batch_idx}")
         val_outputs =  self.eval_step(batch, batch_idx, 'test')
         self.validation_step_outputs.append(val_outputs)
         return val_outputs
@@ -150,17 +151,23 @@ class LitGrapher(pl.LightningModule):
     def eval_step(self, batch, batch_idx, split):
 
         # Unpack batch
+        # target_nodes: batch_size X seq_len_node ?
         text_input_ids, text_input_attn_mask, target_nodes, target_nodes_mask, target_edges = batch
 
         # Generate predictions
-        logits_nodes, seq_nodes, logits_edges, seq_edges = self.model.sample(text_input_ids, text_input_attn_mask)
+        # logits_nodes: batch_size X seq_len_node X vocab_size ?
 
         # ------------------- Val 1 - Predictions as text -------------------
-        # Decode input text, target graph and predicted graphs
+        # Decode input text
         text_dec = decode_text(self.tokenizer, text_input_ids, self.bos_token_id, self.eos_token_id)
+        
+        # Decode target graph 
         dec_target = decode_graph(self.tokenizer, self.edge_classes, target_nodes, target_edges, self.edges_as_classes,
                                   self.node_sep_id, self.max_nodes, self.noedge_cl, self.noedge_id,
                                   self.bos_token_id, self.eos_token_id)
+
+        # Decode predicted graph
+        seq_nodes, seq_edges = self.model.sample(text_input_ids, text_input_attn_mask)
         dec_pred = decode_graph(self.tokenizer, self.edge_classes, seq_nodes, seq_edges, self.edges_as_classes,
                                 self.node_sep_id, self.max_nodes, self.noedge_cl, self.noedge_id,
                                 self.bos_token_id, self.eos_token_id)
@@ -186,17 +193,7 @@ class LitGrapher(pl.LightningModule):
         for i, tb_str in enumerate(TB_str):
             self.logger.experiment.add_text(f'{split}_{rank}/{i}', tb_str, iteration)
 
-        # ------------------- Val 2 - Loss for early stopping -------------------
-        # Compute loss
-        val_loss = compute_loss(self.criterion, logits_nodes, logits_edges, target_nodes,
-                            target_edges, self.edges_as_classes, self.focal_loss_gamma)
-        
-        self.log('val_loss', val_loss, on_step=True, on_epoch=True, logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
-
-        # -----------------------------------------------------------------------
-        # Prepare decoded outputs and focal loss
-        # TODO: Only return decodes if the above line truly aggregates val_loss on epoch level and it can be accessed in EarlyStopping
-        val_outputs = {'decodes': {'text_dec': text_dec, 'dec_target': dec_target, 'dec_pred': dec_pred}, 'val_loss': val_loss} 
+        val_outputs = {'text_dec': text_dec, 'dec_target': dec_target, 'dec_pred': dec_pred}
 
         return val_outputs
 
@@ -205,14 +202,10 @@ class LitGrapher(pl.LightningModule):
 
         dec_target_all = []
         dec_pred_all = []
-        # TODO: Remove this if the val loss can be logged on epoch level in validation_step
-        # val_losses = [] 
 
         for out in self.validation_step_outputs:
-            dec_target_all += out['decodes']['dec_target']
-            dec_pred_all += out['decodes']['dec_pred']
-            # TODO: Remove this if the val loss can be logged on epoch level in validation_step
-            #val_losses.append(out['val_loss'])
+            dec_target_all += out['dec_target']
+            dec_pred_all += out['dec_pred']
 
         # make sure number of paths is smaller than 10
         dec_pred_all = [tr[:10] for tr in dec_pred_all]
@@ -221,18 +214,20 @@ class LitGrapher(pl.LightningModule):
         # hack to avoid crashing the program if evaluation fails
         iteration = self.global_step
         rank = self.global_rank
-        try:
-            scores = compute_scores(dec_pred_all, dec_target_all, iteration, self.eval_dir, split, rank)
-        except Exception:
-            return
+        logging.info(f"Iteration: {self.global_step}; Rank: {self.global_rank}")
 
-        for k, v in scores.items():
-            # What does this log? Scalars for plots in TensorBoard?
-            self.logger.experiment.add_scalar(f'{split}_score/{k}', v, global_step=iteration)
-
-        # TODO: Remove this if the val loss can be logged on epoch level in validation_step
-        # Logging the average validation loss
-        #val_loss_avg = torch.stack([x for x in val_losses]).mean() 
-        #self.log('avg_val_loss', val_loss_avg)   
-
-        self.log_dict(scores)
+        # Save dec_pred_all and dec_target_all triples as hyp and ref xml files, respectively.
+        # Compute Precission, Recall, and F1 and log them
+        scores = compute_scores(dec_pred_all, dec_target_all, iteration, self.eval_dir, split, rank)
+        
+        # Log scores and accumulate accross devices (sync_dist=True)
+        self.log('Precision', scores['Precision'], sync_dist=True)
+        self.log('Recall', scores['Recall'], sync_dist=True)
+        self.log('F1', scores['F1'], sync_dist=True)
+        logging.info(f"Logging validation scores: Precision: {scores['Precision']}; Recall: {scores['Recall']}; F1: {scores['F1']}")
+        
+       
+        #for k, v in scores.items():
+        #    self.logger.experiment.add_scalar(f'{split}_score/{k}', v, global_step=iteration)
+        #    logging.info(f"Logging validation scores: {k}: {v}")
+        #self.log_dict(scores)

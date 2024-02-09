@@ -1,7 +1,7 @@
 from data.dataset import GraphDataModule
 from pytorch_lightning import loggers as pl_loggers
 from argparse import ArgumentParser
-from model.litgrapher import LitGrapher
+from engines.grapher_lightning import LitGrapher
 import pytorch_lightning as pl
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 import os
@@ -9,6 +9,10 @@ from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar, EarlyS
 from misc.utils import decode_graph
 import logging
 import torch
+import nltk
+
+# TODO: Build project structure according to this article:
+# https://medium.com/@l.charteros/scalable-project-structure-for-machine-learning-projects-with-pytorch-and-pytorch-lightning-d5f1408d203e
 
 def main(args):
 
@@ -19,6 +23,12 @@ def main(args):
     os.makedirs(checkpoint_dir, exist_ok=True)
     os.makedirs(os.path.join(eval_dir, 'valid'), exist_ok=True)
     os.makedirs(os.path.join(eval_dir, 'test'), exist_ok=True)
+
+    # Download punkt tokenizer
+    punkt_dir = f"{args.default_root_dir}/../lib/punkt"
+    os.makedirs(punkt_dir, exist_ok=True)
+    nltk.download('punkt', download_dir=punkt_dir)
+    nltk.data.path.append(punkt_dir)
 
     # Logger for TensorBoard
     TB = pl_loggers.TensorBoardLogger(save_dir=args.default_root_dir, name='', version=args.dataset + '_version_' + args.version, default_hp_metric=False)
@@ -93,7 +103,7 @@ def main(args):
         # Create plan to save the model periodically   
         checkpoint_callback = ModelCheckpoint(
             dirpath=checkpoint_dir,
-            filename='model-{epoch:02d}-{train_loss:.2f}-{val_loss:.2f}',
+            filename='model-{epoch:02d}-{train_loss:.2f}-{F1:.2f}',
             every_n_epochs=args.every_n_epochs, # Saves a checkpoint every n epochs 
             save_on_train_epoch_end=False, # Checkpointing runs at the end of validation
             save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
@@ -103,14 +113,14 @@ def main(args):
         )
 
         # If three consecutive validation checks yield no improvement, the trainer stops.
-        # Validation checks are done every check_val_every_n_epoch epoch.
         # Monitor validation loss to prevent overfitting
         early_stopping_callback = EarlyStopping(
-            monitor="val_loss_epoch",
-            mode="min",
+            monitor="F1",
+            mode="max",
             patience=3  
         )
-        
+
+        # Validation checks are done every check_val_every_n_epoch epoch.
         trainer = pl.Trainer(default_root_dir=args.default_root_dir,
                             accelerator=args.accelerator, 
                             max_epochs=args.max_epochs,
@@ -124,9 +134,9 @@ def main(args):
                             detect_anomaly=args.detect_anomaly,
                             log_every_n_steps=args.log_every_n_steps,
                             check_val_every_n_epoch=args.check_val_every_n_epoch,
+                            # val_check_interval=0.10, # Just for debugging
                             logger=TB,
-                            callbacks=[checkpoint_callback,early_stopping_callback,
-                                        RichProgressBar(10)],
+                            callbacks=[checkpoint_callback, early_stopping_callback, RichProgressBar(10)],
                             num_nodes=args.num_nodes)
 
         trainer.fit(model=grapher, datamodule=dm,
@@ -178,8 +188,9 @@ def main(args):
         grapher.to(device)
         grapher.eval()
 
-        tokenizer = T5Tokenizer.from_pretrained(grapher.transformer_name, cache_dir=grapher.cache_dir)
-        tokenizer.model_max_length=256
+        # 150 as max tokens was set based on what was found in the grapher.Grapher.sample function
+        tokenizer = T5Tokenizer.from_pretrained(grapher.transformer_name, cache_dir=grapher.cache_dir,
+                                                model_max_length=150, legacy=True)
         tokenizer.add_tokens('__no_node__')
         tokenizer.add_tokens('__no_edge__')
         tokenizer.add_tokens('__node_sep__')
@@ -190,12 +201,12 @@ def main(args):
                              return_tensors='pt')
 
         text_input_ids, mask = text_tok['input_ids'], text_tok['attention_mask']
+
         # Set the device for input tensors
         text_input_ids = text_input_ids.to(device)
         mask = mask.to(device)
 
-        _, seq_nodes, _, seq_edges = grapher.model.sample(text_input_ids, mask)
-
+        seq_nodes, seq_edges = grapher.model.sample(text_input_ids, mask)
         dec_graph = decode_graph(tokenizer, grapher.edge_classes, seq_nodes, seq_edges, grapher.edges_as_classes,
                                 grapher.node_sep_id, grapher.max_nodes, grapher.noedge_cl, grapher.noedge_id,
                                 grapher.bos_token_id, grapher.eos_token_id)

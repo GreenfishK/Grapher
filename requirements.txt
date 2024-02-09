@@ -14,3 +14,4 @@ SentencePiece==0.1.99
 rich==10.2.2
 datasets==2.16.1
 chardet==5.2.0
+lxml==5.1.0

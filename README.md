@@ -25,7 +25,12 @@ Edge construction, using generation (e.g.,GRU) or a classifier head. Blue circle
 </p>
 
 ## Environment
-To run this code, please install PyTorch and Pytorch Lightning (we tested the code on Pytorch 1.13 and Pytorch Lightning 1.8.1)
+Install miniconda and create a conda environment with the following command, which also sets the python version:
+`conda create -n data_science python=3.10.6`
+Activate your conda environment with
+`conda activate data_science`
+Install the requirements.txt file
+`pip install -r requirements.txt`
   
 
 ## Setup   
@@ -40,17 +45,6 @@ cd Grapher
 # clone another external repositories for scoring the results
 git submodule add https://github.com/WebNLG/WebNLG-Text-to-triples.git WebNLG_Text_to_triples
  ```
-
-Install python using conda
-```
-conda create --name data_science python=3.10.6
-conda activate data_science
-```
-
-install requirements
-```python
-pip install -r requirements.txt
-```
 
 ## Data
 We pull the WebNLG 3.0 dataset from hugging face. It is done automatically in the script datasets.py.
@@ -124,7 +118,7 @@ T5Tokenizer requires the SentencePiece library but it was not found in your envi
 
 * I added the parameter cache_dir to point to a directory with enough space, because the model training requires 2950.74 MB for T5.
 
-* I updated two function names and interfaces in litgrapher.py due to incompatibilities with pytorch_lightning >= 2.0.0:
+* I updated two function names and interfaces in litgrapher.py (now called grapher_lightning.py) due to incompatibilities with pytorch_lightning >= 2.0.0:
 ```
 validation_epoch_end -> on_validation_epoch_end
 test_epoch_end -> on_test_epoch_end

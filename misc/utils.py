@@ -5,6 +5,7 @@ import os
 from misc.rdf import save_webnlg_rdf
 import json
 
+
 failed_node = 'failed node'
 failed_edge = 'failed edge'
 nonode_str = '__no_node__'
@@ -26,7 +27,7 @@ def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edg
     # --------- Node Loss ---   ------
     # shift forward 1 step to create labels
     # The shift ensures that the lengths of the predicted logits 
-    # and the target labels remain consisten
+    # and the target labels remain consistent
     labels = torch.cat([target_nodes[:, 1:], torch.zeros_like(target_nodes[:, -2:-1])], 1)
     loss_nodes = criterion['ce'](logits_nodes.transpose(1,2), labels).mean()
 
@@ -220,9 +221,7 @@ def compute_scores(hyp, ref, iteration, eval_dir, split, rank):
     categories = [' '] * len(refs)
 
     ref_fname, hyp_fname = save_webnlg_rdf(hyps, refs, categories, os.path.join(eval_dir, split), f'{iteration}_{rank}')
-
     scores_fname = os.path.join(eval_dir, split, f'scores_{iteration}_{rank}.json')
-
     Evaluation_script_json.main(ref_fname, hyp_fname, scores_fname)
 
     scores = json.load(open(scores_fname))
