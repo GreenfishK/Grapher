@@ -1,4 +1,4 @@
-from dataset.datamodule import GraphDataModule
+from datasets.webnlg.datamodule import GraphDataModule
 from pytorch_lightning import loggers as pl_loggers
 from argparse import ArgumentParser
 from engines.grapher_lightning import LitGrapher

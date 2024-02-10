@@ -1,4 +1,4 @@
-from .dataset import GraphDataset
+from webnlg import GraphDataset
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from datasets import load_dataset
@@ -8,9 +8,16 @@ import logging
 
 class GraphDataModule(pl.LightningDataModule):
     """
-    ContainsPyTorch Lighting’s LightningDataModule which organizes 
+    Contains PyTorch Lighting’s LightningDataModule which organizes 
     the data loading and preparation steps and offers a clear and standardized interface 
     for the data used in PyTorch Lightning systems.
+    It offers the functions:
+    * prepare_data: Download data to disk.
+    * setup: Load data into GraphDataset(PyTorch's Dataset).
+    * train_dataloader: Returns DataLoader object with the dataset.
+    and additional parameters like batch size and parameters for mini-batch processing.
+    * val_dataloader: Same as train_dataloader, just for validation set.
+    * test_dataloader: Same as train_dataloader, just for test set.
     """
 
     def __init__(self,
@@ -48,6 +55,7 @@ class GraphDataModule(pl.LightningDataModule):
         """
         Download the specified dataset in the self.dataset variable.
         """
+
         if self.dataset == 'webnlg':
             self._prepareWebNLG()
         else:

@@ -1,0 +1,52 @@
+#!/bin/bash
+#
+#SBATCH --job-name train_gen_grapher
+#SBATCH --partition zen2_0256_a40x2   # Specify the partition
+#SBATCH --qos=zen2_0256_a40x2   # Specify the quality of service (QoS)
+#SBATCH --nodes 2                    # Request number of nodes
+#SBATCH --ntasks-per-node=1     # Request one task per node
+#SBATCH --gpus-per-node 2            # Request GPUs per node
+
+#SBATCH --mail-type=BEGIN
+#SBATCH --mail-user=filip.kovacevic@tuwien.ac.at
+
+# Load environment variables
+cd ..
+source .env
+
+python3 scripts/train.py --dataset webnlg \
+                         --run train \
+                         --pretrained_model t5-large \
+                         --version 2 \
+                         --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en \
+                         --cache_dir ${STORAGE_DRIVE}/data/core/cache/grapher \
+                         --num_data_workers 2 \
+                         --every_n_epochs 1 \
+                         --checkpoint_model_id -1 \
+                         --max_nodes 8 \
+                         --max_edges 7 \
+                         --default_seq_len_node 20 \
+                         --default_seq_len_edge 20 \
+                         --edges_as_classes 1 \
+                         --batch_size 20 \
+                         --lr 1e-4 \
+                         --focal_loss_gamma 3 \
+                         --dropout_rate 0.5 \
+                         --num_layers 2 \
+                         --eval_dump_only 0 \
+                         --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output \
+                         --accelerator gpu \
+                         --max_epochs 100 \
+                         --num_nodes 2 \
+                         --num_sanity_val_steps 0 \
+                         --fast_dev_run 0 \
+                         --overfit_batches 0 \
+                         --limit_train_batches 1.0 \
+                         --limit_val_batches 1.0 \
+                         --limit_test_batches 1.0 \
+                         --accumulate_grad_batches 10 \
+                         --log_every_n_steps 100 \
+                         --check_val_every_n_epoch 1 \
+
+# Problems with interpreting 0 as False in main.py
+# --detect_anomaly 0 \
