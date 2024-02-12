@@ -37,7 +37,7 @@ Install the requirements.txt file
 Install dependencies   
 ```bash
 # clone project   
-git clone git@github.com:IBM/Grapher.git
+git clone git@github.com:GreenfishK/Grapher.git
 
 # clone another external repositories for scoring the results
 cd cd Grapher/src
@@ -49,24 +49,39 @@ We pull the WebNLG 3.0 dataset from hugging face. It is done automatically in th
 
 
 ## How to train
-There are two scripts to run two versions of the algorithm
+There are two scripts to run two variantes of the model
 ```bash
 # naviagate to scripts directory
-cd src/scripts
+cd src/scripts/single_node
+# Or for HPC and distributed computing with SLURM
+# cd src/scripts/hpc
 
 # run Grapher with the edge generation head
 # Description from the paper: The advantage of generation is the ability to construct any edge sequence, including ones unseen during training, at the risk of not matching the target edge token sequence exactly.
 ./train_gen.sh
+# Or for HPC with slurm: sbatch train_gen.slrm
 
 # run Grapher with the classifier edge head
 # Description from the paper: if the set of possible relationships is fixed and known, the classification head is more efficient and accurate
 ./train_class.sh
+# Or for HPC with slurm: sbatch train_class.slrm
 ```
 
 ## How to test
 ```bash
 # run the test classifier edge head with using latest checkpoint last.ckpt
-source .env && python3 main.py --run test --version 1 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en
+# naviagate to scripts directory
+cd src/scripts/single_node
+# Or for HPC and distributed computing with SLURM
+# cd src/scripts/hpc
+
+# Test the edge generation head model from the latest checkpoint
+./test_gen.sh
+# Or for HPC with slurm: sbatch test_gen.slrm
+
+# Test the classifier edge head model from the latest checkpoint
+./test_class.sh
+# Or for HPC with slurm: sbatch test_class.slrm
 
 # run the test classifier edge head using checkpoint at iteration 5000
 # Note: This does not work currently because the filename of the checkpoints has been updated
