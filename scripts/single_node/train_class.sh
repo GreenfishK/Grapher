@@ -16,7 +16,7 @@ python3 main.py --run train \
                 --max_edges 7 \
                 --default_seq_len_node 20 \
                 --default_seq_len_edge 20 \
-                --batch_size 20 \
+                --batch_size 8 \
                 --lr 1e-4 \
                 --focal_loss_gamma 3 \
                 --dropout_rate 0.5 \
