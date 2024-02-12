@@ -7,9 +7,23 @@ import logging
 
 class GraphDataset(Dataset):
     """
-    Contains PyTorch's Dataset which allows for efficient and flexible data loading.
-    Load the graph and text data from the text files into a Dataset object, 
-    making it ready for consumption by ML models.
+    PyTorch Dataset for loading graph and text data.
+
+    Args:
+        * tokenizer (Tokenizer): Tokenizer object for text tokenization.
+        * text_data_path (str): Path to the text data file.
+        * graph_data_path (str): Path to the graph data file.
+        * edge_classes_path (str): Path to the file containing edge classes.
+        * max_nodes (int): Maximum number of nodes in each graph.
+        * max_edges (int): Maximum number of edges in each graph.
+        * edges_as_classes (bool): Flag indicating whether edges are treated as classes.
+
+    Methods:
+        * parse_graph_data(): Parses the graph data and extracts nodes and edges.
+        * __len__(): Returns the total number of samples in the dataset.
+        * __getitem__(index): Retrieves a sample at the given index.
+        * _build_inputs_with_special_tokens(token_ids_0, _): Builds inputs with special tokens.
+        * _collate_fn(data): Collates data samples into batches.
     """
 
     def __init__(

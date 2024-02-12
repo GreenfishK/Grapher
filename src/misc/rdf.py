@@ -1,5 +1,4 @@
 from typing import List, Any
-
 from os.path import join
 from xml.etree.ElementTree import Element, SubElement
 from xml.etree import ElementTree

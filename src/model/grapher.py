@@ -5,6 +5,7 @@ from torch import nn
 # Logits: Raw, unnormalized final scores of the model (e.g. transformer) before softmax is applied.
 # scores: probabilities after softmax.
 
+
 class Grapher(nn.Module):
     def __init__(self,
                  transformer_class,
@@ -181,7 +182,6 @@ class GRUDecoder(nn.Module):
 
         self.gru = nn.GRU(hidden_size, hidden_size, batch_first=True, num_layers=1)
         self.out = nn.Linear(hidden_size, vocab_size)
-
         self.embedding = nn.Embedding(vocab_size, hidden_size)
 
     # Override

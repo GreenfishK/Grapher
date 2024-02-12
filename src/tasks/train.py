@@ -1,22 +1,20 @@
-from datasets.webnlg.datamodule import GraphDataModule
-from pytorch_lightning import loggers as pl_loggers
-from argparse import ArgumentParser
+from data.webnlg.datamodule import GraphDataModule
 from engines.grapher_lightning import LitGrapher
+
+from pytorch_lightning import loggers as pl_loggers
 import pytorch_lightning as pl
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 import os
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar, EarlyStopping
-from misc.utils import decode_graph
-import logging
 import torch
 import nltk
+import logging
 
 
-
-def train(args):
+def train(args, model_variant):
 
     # Create directories for validations, tests and checkpoints
-    eval_dir = os.path.join(args.default_root_dir, args.dataset + '_version_' + args.version)
+    eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
     checkpoint_dir = os.path.join(eval_dir, 'checkpoints')
 
     os.makedirs(checkpoint_dir, exist_ok=True)
@@ -32,7 +30,7 @@ def train(args):
     # Logger for TensorBoard
     TB = pl_loggers.TensorBoardLogger(save_dir=args.default_root_dir,
                                       name='',
-                                      version=args.dataset + '_version_' + args.version, 
+                                      version=args.dataset + '_model_variant=' + model_variant, 
                                       default_hp_metric=False)
 
     # Start from last checkpoint or a specific checkpoint. 
@@ -122,6 +120,8 @@ def train(args):
         patience=3  
     )
 
+    logging.info(f"Number of nodeS: {os.environ["SLURM_NNODES"]}")
+
     # Validation checks are done every check_val_every_n_epoch epoch.
     trainer = pl.Trainer(default_root_dir=args.default_root_dir,
                         accelerator=args.accelerator, 
@@ -144,51 +144,3 @@ def train(args):
     trainer.fit(model=grapher, datamodule=dm,
                 ckpt_path=checkpoint_model_path if os.path.exists(checkpoint_model_path) else None)    
         
-    
-# --------------------------------------------------------------
-# Start training
-# --------------------------------------------------------------
-    
-# Parse arguments
-parser = ArgumentParser(description='Arguments')
-
-parser.add_argument("--dataset", type=str, default='webnlg')
-parser.add_argument("--run", type=str, default='train')
-parser.add_argument('--pretrained_model', type=str, default='t5-large')
-parser.add_argument('--version', type=str, default='0')
-parser.add_argument('--data_path', type=str, default='')
-parser.add_argument('--cache_dir', type=str, default='cache')
-parser.add_argument('--num_data_workers', type=int, default=3)
-parser.add_argument('--every_n_epochs', type=int, default=-1)
-parser.add_argument('--checkpoint_model_id', type=int, default=-1)
-parser.add_argument('--max_nodes', type=int, default=8)
-parser.add_argument('--max_edges', type=int, default=7)
-parser.add_argument('--default_seq_len_node', type=int, default=20)
-parser.add_argument('--default_seq_len_edge', type=int, default=20)
-parser.add_argument('--edges_as_classes', type=int, default=0)
-parser.add_argument('--batch_size', type=int, default=10)
-parser.add_argument('--lr', default=1e-5, type=float)
-parser.add_argument("--focal_loss_gamma", type=float, default=0.0)
-parser.add_argument("--dropout_rate", type=float, default=0.5)
-parser.add_argument("--num_layers", type=int, default=1)
-parser.add_argument("--eval_dump_only", type=int, default=0)
-
-# Pytorch lightning params
-parser.add_argument("--default_root_dir", type=str, default="output")
-parser.add_argument("--accelerator", type=str, default="cpu")
-parser.add_argument("--max_epochs", type=int, default=100)
-parser.add_argument("--num_nodes", type=int, default=1)
-parser.add_argument("--num_sanity_val_steps", type=int, default=0)
-parser.add_argument("--fast_dev_run", type=int, default=0)
-parser.add_argument("--overfit_batches", type=int, default=0)
-parser.add_argument("--limit_train_batches", type=float, default=1.0)
-parser.add_argument("--limit_val_batches", type=float, default=1.0)
-parser.add_argument("--limit_test_batches", type=float, default=1.0)
-parser.add_argument("--accumulate_grad_batches", type=int, default=10)
-parser.add_argument("--detect_anomaly", action="store_true", default=False)
-parser.add_argument("--log_every_n_steps", type=int, default=100)
-parser.add_argument("--check_val_every_n_epoch", type=int, default=1)
-
-args = parser.parse_args()
-train(args)
-

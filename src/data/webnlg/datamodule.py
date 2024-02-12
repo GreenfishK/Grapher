@@ -1,4 +1,5 @@
-from webnlg import GraphDataset
+from data.webnlg.dataset import GraphDataset
+
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 from datasets import load_dataset

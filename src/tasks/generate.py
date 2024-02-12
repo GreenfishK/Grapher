@@ -1,23 +1,18 @@
-from datasets.webnlg.datamodule import GraphDataModule
-from pytorch_lightning import loggers as pl_loggers
-from argparse import ArgumentParser
 from engines.grapher_lightning import LitGrapher
-import pytorch_lightning as pl
-from transformers import T5Tokenizer, T5ForConditionalGeneration
-import os
-from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar, EarlyStopping
 from misc.utils import decode_graph
+
+from transformers import T5Tokenizer
+import os
 import logging
 import torch
-import nltk
 
 # TODO: Build project structure according to this article:
 # https://medium.com/@l.charteros/scalable-project-structure-for-machine-learning-projects-with-pytorch-and-pytorch-lightning-d5f1408d203e
 
-def generate(args):
+def generate(args, model_variant):
 
     # Create directories for validations, tests and checkpoints
-    eval_dir = os.path.join(args.default_root_dir, args.dataset + '_version_' + args.version)
+    eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
     checkpoint_dir = os.path.join(eval_dir, 'checkpoints')
 
     # Start from last checkpoint or a specific checkpoint. 
@@ -63,28 +58,3 @@ def generate(args):
     
     print(f'Generated Graph: {graph_str}')
         
-    
-# --------------------------------------------------------------
-# Start inference
-# --------------------------------------------------------------
-    
-# Parsing arguments
-parser = ArgumentParser(description='Arguments')
-
-parser.add_argument("--dataset", type=str, default='webnlg')
-parser.add_argument('--checkpoint_model_id', type=int, default=-1)
-parser.add_argument('--batch_size', type=int, default=10)
-parser.add_argument('--lr', default=1e-5, type=float)
-parser.add_argument("--focal_loss_gamma", type=float, default=0.0)
-parser.add_argument("--dropout_rate", type=float, default=0.5)
-parser.add_argument("--num_layers", type=int, default=1)
-parser.add_argument("--eval_dump_only", type=int, default=0)
-
-# pytorch lightning params
-parser.add_argument("--default_root_dir", type=str, default="output")
-parser.add_argument("--inference_input_text", type=str,
-                    default='Danielle Harris had a main role in Super Capers, a 98 minute long movie.') 
-
-args = parser.parse_args()
-generate(args)
-

@@ -39,11 +39,8 @@ Install dependencies
 # clone project   
 git clone git@github.com:IBM/Grapher.git
 
-# navigate to the directory
-cd Grapher
-
 # clone another external repositories for scoring the results
-cd src
+cd cd Grapher/src
 git submodule add https://github.com/WebNLG/WebNLG-Text-to-triples.git WebNLG_Text_to_triples
  ```
 

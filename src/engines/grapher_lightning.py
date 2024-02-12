@@ -1,5 +1,6 @@
 from model.grapher import Grapher
 from misc.utils import compute_loss, decode_text, decode_graph, compute_scores
+
 import torch
 import pytorch_lightning as pl
 import torch.nn.functional as F
