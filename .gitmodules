@@ -3,3 +3,6 @@
 	url = https://github.com/WebNLG/WebNLG-Text-to-triples.git
 	ignore = dirty
 
+[submodule "src/WebNLG-Text-to-triples"]
+	path = src/WebNLG-Text-to-triples
+	url = https://github.com/WebNLG/WebNLG-Text-to-triples.git
