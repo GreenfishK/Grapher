@@ -120,8 +120,6 @@ def train(args, model_variant):
         patience=3  
     )
 
-    logging.info(f"Number of nodeS: {os.environ["SLURM_NNODES"]}")
-
     # Validation checks are done every check_val_every_n_epoch epoch.
     trainer = pl.Trainer(default_root_dir=args.default_root_dir,
                         accelerator=args.accelerator, 

@@ -1,14 +1,4 @@
 #!/bin/bash
-#
-#SBATCH --job-name=train_class_grapher
-#SBATCH --partition=zen2_0256_a40x2   # Specify the partition
-#SBATCH --qos=zen2_0256_a40x2   # Specify the quality of service (QoS)
-#SBATCH --nodes=2                    # Request number of nodes
-#SBATCH --ntasks-per-node=1     # Request one task per node
-#SBATCH --gpus-per-node=2            # Request GPUs per node
-
-#SBATCH --mail-type=BEGIN
-#SBATCH --mail-user=filip.kovacevic@tuwien.ac.at
 
 # Load environment variables
 cd ../../src && source .env 
@@ -19,7 +9,7 @@ python3 main.py --run train \
                 --pretrained_model t5-large \
                 --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en \
                 --cache_dir ${STORAGE_DRIVE}/data/core/cache/grapher \
-                --num_data_workers 2 \
+                --num_data_workers 1 \
                 --every_n_epochs 1 \
                 --checkpoint_model_id -1 \
                 --max_nodes 8 \
@@ -35,7 +25,7 @@ python3 main.py --run train \
                 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output \
                 --accelerator gpu \
                 --max_epochs 100 \
-                --num_nodes 2 \
+                --num_nodes 1 \
                 --num_sanity_val_steps 0 \
                 --fast_dev_run 0 \
                 --overfit_batches 0 \

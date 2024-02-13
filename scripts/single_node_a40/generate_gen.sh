@@ -1,14 +1,4 @@
 #!/bin/bash
-#
-#SBATCH --job-name=train_gen_grapher
-#SBATCH --partition=zen2_0256_a40x2   # Specify the partition
-#SBATCH --qos=zen2_0256_a40x2   # Specify the quality of service (QoS)
-#SBATCH --nodes=1                    # Request number of nodes
-#SBATCH --ntasks-per-node=1     # Request one task per node
-#SBATCH --gpus-per-node=2            # Request GPUs per node
-
-#SBATCH --mail-type=BEGIN
-#SBATCH --mail-user=filip.kovacevic@tuwien.ac.at
 
 # Load environment variables
 cd ../../src && source .env 

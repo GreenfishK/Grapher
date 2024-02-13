@@ -10,9 +10,6 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=filip.kovacevic@tuwien.ac.at
 
-# For interactive terminal use:
-# salloc --nodes=2 --qos=zen2_0256_a40x2 --partition=zen2_0256_a40x2
-
 # Load environment variables
 cd ../../src && source .env 
 
