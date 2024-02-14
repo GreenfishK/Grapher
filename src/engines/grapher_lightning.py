@@ -123,6 +123,9 @@ class LitGrapher(pl.LightningModule):
         self.log('train_loss', loss, on_step=True, on_epoch=True,
                  logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
         
+        # Free up GPU memory
+        torch.cuda.empty_cache()
+        
         return loss
 
     # Override
@@ -241,5 +244,3 @@ class LitGrapher(pl.LightningModule):
         self.log('Recall', scores['Recall'], sync_dist=True)
         self.log('F1', scores['F1'], sync_dist=True)
 
-        # Free up GPU memory
-        torch.cuda.empty_cache()
