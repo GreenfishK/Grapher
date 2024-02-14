@@ -1,6 +1,7 @@
 src/WebNLG_Text_to_triples/
 src/model/__pycache__/
-src/dataset/__pycache__/
+src/data/webnlg/__pycache__/
 src/misc/__pycache__/
 src/engines/__pycache__/
+src/tasks/__pycache__/
 .env

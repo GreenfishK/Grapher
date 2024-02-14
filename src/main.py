@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from tasks import train, test, generate
 import torch
 import os
+import nltk
 
 # Parsing arguments
 parser = ArgumentParser(description='Arguments')
@@ -47,11 +48,18 @@ args = parser.parse_args()
 
 # Run train, test or generate task
 model_variant = "gen" if args.edges_as_classes == 0 else "class"
-# Specify the GPU device you want to use
+# For single GPU, specify device
 if torch.cuda.device_count() <= 1:
     device = torch.device(f"cuda:{os.environ['CUDA_VISIBLE_DEVICES']}") 
 else:
     device = None
+
+if args.run in ['train', 'test']:
+    # Download punkt tokenizer
+    punkt_dir = f"{args.default_root_dir}/../lib/punkt"
+    os.makedirs(punkt_dir, exist_ok=True)
+    nltk.download('punkt', download_dir=punkt_dir)
+    nltk.data.path.append(punkt_dir)
 
 if args.run == "train":
     train.train(args, model_variant, device)

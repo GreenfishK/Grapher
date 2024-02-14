@@ -230,7 +230,7 @@ class LitGrapher(pl.LightningModule):
         dec_pred_all = [tr[:10] for tr in dec_pred_all]
         dec_target_all = [tr[:10] for tr in dec_target_all]
 
-        # Compute Precission, Recall, and F1 and log them
+        # Compute Precission, Recall, and F1, log them as JSON files and to LightningModule
         logging.info(f"Iteration: {self.global_step}; Rank: {self.global_rank}")
         scores = compute_scores(dec_pred_all, dec_target_all, self.global_step,
                                 self.eval_dir, split, self.global_rank)

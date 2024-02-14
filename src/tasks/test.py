@@ -5,7 +5,7 @@ from pytorch_lightning import loggers as pl_loggers
 import pytorch_lightning as pl
 from transformers import T5Tokenizer
 import os
-import torch
+
 
 # TODO: Build project structure according to this article:
 # https://medium.com/@l.charteros/scalable-project-structure-for-machine-learning-projects-with-pytorch-and-pytorch-lightning-d5f1408d203e

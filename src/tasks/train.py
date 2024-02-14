@@ -6,9 +6,6 @@ import pytorch_lightning as pl
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 import os
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar, EarlyStopping
-import torch
-import nltk
-import logging
 from datetime import datetime
 
 def train(args, model_variant, device):
@@ -21,12 +18,6 @@ def train(args, model_variant, device):
     os.makedirs(checkpoint_dir, exist_ok=True)
     os.makedirs(os.path.join(eval_dir, 'valid'), exist_ok=True)
     os.makedirs(os.path.join(eval_dir, 'test'), exist_ok=True)
-
-    # Download punkt tokenizer
-    punkt_dir = f"{args.default_root_dir}/../lib/punkt"
-    os.makedirs(punkt_dir, exist_ok=True)
-    nltk.download('punkt', download_dir=punkt_dir)
-    nltk.data.path.append(punkt_dir)
 
     # Logger for TensorBoard
     TB = pl_loggers.TensorBoardLogger(save_dir=args.default_root_dir,

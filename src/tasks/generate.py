@@ -3,8 +3,7 @@ from misc.utils import decode_graph
 
 from transformers import T5Tokenizer
 import os
-import logging
-import torch
+
 
 # TODO: Build project structure according to this article:
 # https://medium.com/@l.charteros/scalable-project-structure-for-machine-learning-projects-with-pytorch-and-pytorch-lightning-d5f1408d203e
