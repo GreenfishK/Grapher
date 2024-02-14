@@ -1,5 +1,7 @@
 from argparse import ArgumentParser
 from tasks import train, test, generate
+import torch
+import os
 
 # Parsing arguments
 parser = ArgumentParser(description='Arguments')
@@ -45,12 +47,17 @@ args = parser.parse_args()
 
 # Run train, test or generate task
 model_variant = "gen" if args.edges_as_classes == 0 else "class"
+# Specify the GPU device you want to use
+if torch.cuda.device_count() <= 1:
+    device = torch.device(f"cuda:{os.environ['CUDA_VISIBLE_DEVICES']}") 
+else:
+    device = None
 
 if args.run == "train":
-    train.train(args, model_variant)
+    train.train(args, model_variant, device)
 elif args.run == "test":
-    test.test(args, model_variant)
+    test.test(args, model_variant, device)
 elif args.run == "inference":
-    generate.generate(args, model_variant)
+    generate.generate(args, model_variant, device)
 else:
     raise ValueError("The train argument must be one of the three values: train, test, inference.")

@@ -14,16 +14,19 @@ nonode_str = '__no_node__'
 
 def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edges, edges_as_classes, focal_loss_gamma):
     """
-    This function computes the loss for the model during training.
-    It takes the following arguments:
-        criterion: Dictionary containing the loss functions for nodes and edges.
-        logits_nodes: Logits for nodes predicted by the model.
-        logits_edges: Logits for edges predicted by the model.
-        target_nodes: Ground truth labels for nodes.
-        target_edges: Ground truth labels for edges.
-        edges_as_classes: Boolean indicating whether edges are treated as classes or not.
-        focal_loss_gamma: Parameter for the focal loss function.
-    It computes the cross-entropy loss for nodes and edges separately and returns their sum as the total loss.
+    This function computes the loss for the model during training. 
+    It computes the cross-entropy loss for nodes and edges separately 
+    and returns their sum as the total loss. In case focal_loss_gamma is not None, 
+    it computes the focal loss for edges.
+    Args:
+        * criterion: Dictionary containing the loss functions for nodes and edges.
+        * logits_nodes: Logits for nodes predicted by the model.
+        * logits_edges: Logits for edges predicted by the model.
+        * target_nodes: Ground truth labels for nodes.
+        * target_edges: Ground truth labels for edges.
+        * edges_as_classes: Boolean indicating whether edges are treated as classes or not.
+        * focal_loss_gamma: Parameter for the focal loss function.
+    
     """
     # --------- Node Loss ---   ------
     # shift forward 1 step to create labels
@@ -51,14 +54,49 @@ def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edg
     return loss
 
 
+def compute_scores(hyp, ref, iteration, eval_dir, split, rank):
+    """
+    Compute evaluation scores (prec, rec, F1) for generated triples against reference triples.
+    Args:
+        * hyp: List of generated triples (hypotheses).
+        * ref: List of reference triples.
+        * iteration: Iteration or step number of the training process.
+        * eval_dir: Directory path where evaluation files will be stored.
+        * split: Name of the data split (e.g., 'valid' or 'test').
+        * rank: Rank of the process (used for naming files).
+
+    Convert the hypotheses and references into RDF/xml format files and saves them as xml files.
+    Compute evaluation scores based on these XML files and save them as JSON files.
+    Load the JSON files and extract evaluation scores from them.
+
+    Returns:
+        The evaluation scores as dict.
+
+    """
+    refs = [[' | '.join(i) for i in t] for t in ref]
+    hyps = [[' | '.join(i) for i in t] for t in hyp]
+    categories = [' '] * len(refs)
+
+    ref_fname, hyp_fname = save_webnlg_rdf(hyps, refs, categories, os.path.join(eval_dir, split), f'{iteration}_{rank}')
+    scores_fname = os.path.join(eval_dir, split, f'scores_{iteration}_{rank}.json')
+    Evaluation_script_json.main(ref_fname, hyp_fname, scores_fname)
+
+    scores = json.load(open(scores_fname))
+    scores = {'Precision': scores['Total_scores']['Exact']['Precision'],
+              'Recall': scores['Total_scores']['Exact']['Recall'],
+              'F1': scores['Total_scores']['Exact']['F1']}
+
+    return scores
+
+
 def decode_text(tokenizer, text_input_ids, bos_token_id, eos_token_id):
     """
     This function decodes a batch of text sequences represented as token IDs into a list of strings.
-    It takes the following arguments:
-        tokenizer: Tokenizer object for decoding.
-        text_input_ids: Batch of input token IDs.
-        bos_token_id: Token ID for the beginning-of-sequence token.
-        eos_token_id: Token ID for the end-of-sequence token.
+    Args:
+        * tokenizer: Tokenizer object for decoding.
+        * text_input_ids: Batch of input token IDs.
+        * bos_token_id: Token ID for the beginning-of-sequence token.
+        * eos_token_id: Token ID for the end-of-sequence token.
     It iterates over each text sequence in the batch, finds the beginning-of-sequence and end-of-sequence tokens, 
     and decodes the text between them using the tokenizer.
     It returns a list of decoded text strings.
@@ -77,22 +115,24 @@ def decode_text(tokenizer, text_input_ids, bos_token_id, eos_token_id):
 def decode_graph(tokenizer, edge_classes, bnodes, bedges, edges_as_classes, node_sep_id,
                  max_nodes, noedge_cl, noedge_id, bos_token_id, eos_token_id):
     """
-    This function decodes a batch of graph representations (nodes and edges) into a list of triples.
-    It takes the following arguments:
-        tokenizer: Tokenizer object for decoding.
-        edge_classes: List of edge classes.
-        bnodes: Batch of node sequences represented as token IDs.
-        bedges: Batch of edge sequences represented as token IDs.
-        edges_as_classes: Boolean indicating whether edges are treated as classes or not.
-        node_sep_id: Token ID for separating nodes.
-        max_nodes: Maximum number of nodes in a graph.
-        noedge_cl: Class representing no edge.
-        noedge_id: Token ID representing no edge.
-        bos_token_id: Token ID for the beginning-of-sequence token.
-        eos_token_id: Token ID for the end-of-sequence token.
+    This function decodes a batch of node and edge tokens into a list of triples.
     It constructs a directed graph using NetworkX library based on the input node and edge sequences.
     It decodes the nodes and edges into strings and forms triples.
-    It returns a list of decoded triples for each graph in the batch.
+    Args:
+        * tokenizer: Tokenizer object for decoding.
+        * edge_classes: List of edge classes.
+        * bnodes: Batch of node sequences represented as token IDs.
+        * bedges: Batch of edge sequences represented as token IDs.
+        * edges_as_classes: Boolean indicating whether edges are treated as classes or not.
+        * node_sep_id: Token ID for separating nodes.
+        * max_nodes: Maximum number of nodes in a graph.
+        * noedge_cl: Class representing no edge.
+        * noedge_id: Token ID representing no edge.
+        * bos_token_id: Token ID for the beginning-of-sequence token.
+        * eos_token_id: Token ID for the end-of-sequence token.
+    Returns:
+        * A list of decoded triples for each graph in the batch.
+
     """
     if edges_as_classes:
         bedges = bedges.permute(2, 0, 1)
@@ -179,12 +219,12 @@ def decode_graph(tokenizer, edge_classes, bnodes, bedges, edges_as_classes, node
 def _decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
     """
     This function decodes a sequence of tokens into a string.
-    It takes the following arguments:
-        cand: Tensor representing the sequence of tokens.
-        bos_token_id: Token ID for the beginning-of-sequence token.
-        eos_token_id: Token ID for the end-of-sequence token.
-        tokenizer: Tokenizer object for decoding.
-        failed: String to return if decoding fails.
+    Args:
+        * cand: Tensor representing the sequence of tokens.
+        * bos_token_id: Token ID for the beginning-of-sequence token.
+        * eos_token_id: Token ID for the end-of-sequence token.
+        * tokenizer: Tokenizer object for decoding.
+        * failed: String to return if decoding fails.
     It first finds the indices of the beginning-of-sequence and end-of-sequence tokens in the tensor.
     Then, it decodes the sequence between these tokens using the tokenizer.
     If decoding fails (no beginning-of-sequence token found), it returns the failed string.
@@ -202,32 +242,3 @@ def _decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
     return s
 
 
-def compute_scores(hyp, ref, iteration, eval_dir, split, rank):
-    """
-    This function computes evaluation scores for generated triples against reference triples.
-    It takes the following arguments:
-        hyp: List of generated triples (hypotheses).
-        ref: List of reference triples.
-        iteration: Iteration or step number of the training process.
-        eval_dir: Directory path where evaluation files will be stored.
-        split: Name of the data split (e.g., 'valid' or 'test').
-        rank: Rank of the process (used for naming files).
-    It first converts the hypotheses and references into RDF format files.
-    It then calls an external evaluation script (Evaluation_script_json.main) to compute evaluation scores based on these RDF files.
-    After obtaining the evaluation scores, it extracts precision, recall, and F1 scores from the result.
-    Finally, it returns a dictionary containing precision, recall, and F1 scores.
-    """
-    refs = [[' | '.join(i) for i in t] for t in ref]
-    hyps = [[' | '.join(i) for i in t] for t in hyp]
-    categories = [' '] * len(refs)
-
-    ref_fname, hyp_fname = save_webnlg_rdf(hyps, refs, categories, os.path.join(eval_dir, split), f'{iteration}_{rank}')
-    scores_fname = os.path.join(eval_dir, split, f'scores_{iteration}_{rank}.json')
-    Evaluation_script_json.main(ref_fname, hyp_fname, scores_fname)
-
-    scores = json.load(open(scores_fname))
-    scores = {'Precision': scores['Total_scores']['Exact']['Precision'],
-              'Recall': scores['Total_scores']['Exact']['Recall'],
-              'F1': scores['Total_scores']['Exact']['F1']}
-
-    return scores

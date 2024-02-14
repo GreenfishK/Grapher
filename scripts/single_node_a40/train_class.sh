@@ -9,7 +9,7 @@ python3 main.py --run train \
                 --pretrained_model t5-large \
                 --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en \
                 --cache_dir ${STORAGE_DRIVE}/data/core/cache/grapher \
-                --num_data_workers 1 \
+                --num_data_workers 15 \
                 --every_n_epochs 1 \
                 --checkpoint_model_id -1 \
                 --max_nodes 8 \
@@ -38,3 +38,4 @@ python3 main.py --run train \
 
 # Problems with interpreting 0 as False in main.py
 # --detect_anomaly 0 \
+# TODO: increase num_data_workers to 15

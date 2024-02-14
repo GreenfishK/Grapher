@@ -10,7 +10,7 @@ import torch
 # TODO: Build project structure according to this article:
 # https://medium.com/@l.charteros/scalable-project-structure-for-machine-learning-projects-with-pytorch-and-pytorch-lightning-d5f1408d203e
 
-def test(args, model_variant):
+def test(args, model_variant, device):
 
     # Logger for TensorBoard
     TB = pl_loggers.TensorBoardLogger(save_dir=args.default_root_dir, name='', version=args.dataset + '_model_variant=' + model_variant, default_hp_metric=False)
@@ -22,15 +22,12 @@ def test(args, model_variant):
         checkpoint_model_path = os.path.join(checkpoint_dir, 'last.ckpt')
     else:
         checkpoint_model_path = os.path.join(checkpoint_dir, f"model-step={args.checkpoint_model_id}.ckpt")
-    
-    # Specify the GPU device you want to use
-    if torch.cuda.device_count() <= 1:
-        device = torch.device(f"cuda:{os.environ['CUDA_VISIBLE_DEVICES']}") 
 
     assert os.path.exists(checkpoint_model_path), 'Provided checkpoint does not exists, cannot run the test'
 
     grapher = LitGrapher.load_from_checkpoint(checkpoint_path=checkpoint_model_path)
-    grapher.to(device)
+    if device:
+        grapher.to(device)
     grapher.eval()
 
     dm = GraphDataModule(tokenizer_class=T5Tokenizer,

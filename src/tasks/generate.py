@@ -9,7 +9,7 @@ import torch
 # TODO: Build project structure according to this article:
 # https://medium.com/@l.charteros/scalable-project-structure-for-machine-learning-projects-with-pytorch-and-pytorch-lightning-d5f1408d203e
 
-def generate(args, model_variant):
+def generate(args, model_variant, device):
 
     # Create directories for validations, tests and checkpoints
     eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
@@ -21,14 +21,10 @@ def generate(args, model_variant):
     else:
         checkpoint_model_path = os.path.join(checkpoint_dir, f"model-step={args.checkpoint_model_id}.ckpt")
     assert os.path.exists(checkpoint_model_path), 'Provided checkpoint does not exists, cannot do inference'
-
-    # Specify the GPU device you want to use
-    if torch.cuda.device_count() <= 1:
-        device = torch.device(f"cuda:{os.environ['CUDA_VISIBLE_DEVICES']}") 
-
-    logging.info(device)
+        
     grapher = LitGrapher.load_from_checkpoint(checkpoint_path=checkpoint_model_path)
-    grapher.to(device)
+    if device:
+        grapher.to(device)
     grapher.eval()
 
     # 150 as max tokens was set based on what was found in the grapher.Grapher.sample function
@@ -46,9 +42,13 @@ def generate(args, model_variant):
     text_input_ids, mask = text_tok['input_ids'], text_tok['attention_mask']
 
     # Set the device for input tensors
-    text_input_ids = text_input_ids.to(device)
-    mask = mask.to(device)
-
+    if device:
+        text_input_ids = text_input_ids.to(device)
+        mask = mask.to(device)
+    else:
+        text_input_ids = text_input_ids.to('cuda')
+        mask = mask.to('cuda')
+    
     seq_nodes, seq_edges = grapher.model.sample(text_input_ids, mask)
     dec_graph = decode_graph(tokenizer, grapher.edge_classes, seq_nodes, seq_edges, grapher.edges_as_classes,
                             grapher.node_sep_id, grapher.max_nodes, grapher.noedge_cl, grapher.noedge_id,

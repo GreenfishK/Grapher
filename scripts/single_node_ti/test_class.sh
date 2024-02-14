@@ -5,7 +5,6 @@ cd ../../src && source .env
 
 python3 main.py --run test \
                 --edges_as_classes 1 \
-                --checkpoint_model_path -1 \
                 --dataset webnlg \
                 --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en \
                 --num_data_workers 1 \

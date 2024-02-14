@@ -9,11 +9,12 @@ from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar, EarlyS
 import torch
 import nltk
 import logging
+from datetime import datetime
 
-
-def train(args, model_variant):
+def train(args, model_variant, device):
 
     # Create directories for validations, tests and checkpoints
+    # str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
     eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
     checkpoint_dir = os.path.join(eval_dir, 'checkpoints')
 
@@ -38,10 +39,6 @@ def train(args, model_variant):
         checkpoint_model_path = os.path.join(checkpoint_dir, 'last.ckpt')
     else:
         checkpoint_model_path = os.path.join(checkpoint_dir, f"model-epoch={args.epoch}-train_loss={args.train_loss}-F1={args.F1}.ckpt")
-    
-    # Specify the GPU device you want to use
-    if torch.cuda.device_count() <= 1:
-        device = torch.device(f"cuda:{os.environ['CUDA_VISIBLE_DEVICES']}") 
 
 
     # -------------------- Data module ---------------------
@@ -93,13 +90,22 @@ def train(args, model_variant):
                         num_classes=len(dm.dataset_train.edge_classes))
     
     # Wrap the model with DataParallel
-    if torch.cuda.device_count() <= 1:
+    if device:
         grapher.to(device)
 
     # disable randomness, dropout, etc...
     grapher.eval()
 
     # -------------------- Trainer ---------------------
+
+    # Trade off precision for performance
+    # lst_tensor_devices = ['NVIDIA A40', 'NVIDIA A100']
+    # cnt_devices = torch.cuda.device_count()
+    # for i in cnt_devices:
+    #   if torch.cuda.get_device_name(i) in lst_tensor_devices:
+    #       torch.set_float32_matmul_precision
+    #       break
+
     # Create plan to save the model periodically   
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_dir,
@@ -107,15 +113,14 @@ def train(args, model_variant):
         every_n_epochs=args.every_n_epochs, # Saves a checkpoint every n epochs 
         save_on_train_epoch_end=False, # Checkpointing runs at the end of validation
         save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
-        save_top_k=3, # Save top 3
-        mode="min",
-        monitor="train_loss",
+        save_top_k=-1, # Save all models
     )
 
     # If three consecutive validation checks yield no improvement, the trainer stops.
     # Monitor validation loss to prevent overfitting
     early_stopping_callback = EarlyStopping(
         monitor="F1",
+        min_delta=0.005,
         mode="max",
         patience=3  
     )
@@ -139,6 +144,7 @@ def train(args, model_variant):
                         callbacks=[checkpoint_callback, early_stopping_callback, RichProgressBar(10)],
                         num_nodes=args.num_nodes)
 
-    trainer.fit(model=grapher, datamodule=dm,
+    trainer.fit(model=grapher, 
+                datamodule=dm,
                 ckpt_path=checkpoint_model_path if os.path.exists(checkpoint_model_path) else None)    
         

@@ -5,7 +5,6 @@ cd ../../src && source .env
 
 python3 main.py --run inference \
                 --edges_as_classes 0 \
-                --checkpoint_model_path -1 \
                 --dataset webnlg \
                 --checkpoint_model_id -1 \
                 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output \
