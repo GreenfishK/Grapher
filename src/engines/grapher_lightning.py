@@ -118,10 +118,11 @@ class LitGrapher(pl.LightningModule):
         loss = compute_loss(self.criterion, logits_nodes, logits_edges, target_nodes,
                             target_edges, self.edges_as_classes, self.focal_loss_gamma)
         
-        self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
-
-        # Free up GPU memory
-        torch.cuda.empty_cache()
+        # Both flags, on_step and on_epoch need to be True so that 
+        # train_loss_epoch is accessible in ModelCheckpoint.
+        logging.info(f"Train_loss: {loss}")
+        self.log('train_loss', loss, on_step=True, on_epoch=True,
+                 logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
         
         return loss
 
@@ -240,3 +241,6 @@ class LitGrapher(pl.LightningModule):
         self.log('Precision', scores['Precision'], sync_dist=True)
         self.log('Recall', scores['Recall'], sync_dist=True)
         self.log('F1', scores['F1'], sync_dist=True)
+
+        # Free up GPU memory
+        torch.cuda.empty_cache()

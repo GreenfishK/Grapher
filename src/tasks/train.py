@@ -7,6 +7,8 @@ from transformers import T5Tokenizer, T5ForConditionalGeneration
 import os
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar, EarlyStopping
 from datetime import datetime
+import torch
+import logging
 
 def train(args, model_variant, device):
 
@@ -90,17 +92,21 @@ def train(args, model_variant, device):
     # -------------------- Trainer ---------------------
 
     # Trade off precision for performance
-    # lst_tensor_devices = ['NVIDIA A40', 'NVIDIA A100']
-    # cnt_devices = torch.cuda.device_count()
-    # for i in cnt_devices:
-    #   if torch.cuda.get_device_name(i) in lst_tensor_devices:
-    #       torch.set_float32_matmul_precision
-    #       break
+    lst_tensor_devices = ['NVIDIA A40', 'NVIDIA A100']
+    cnt_devices = torch.cuda.device_count()
+    for i in range(cnt_devices):
+        logging.info(torch.cuda.get_device_name(i))
+        if torch.cuda.get_device_name(i) in lst_tensor_devices:
+           torch.set_float32_matmul_precision('high')
+           break
 
-    # Create plan to save the model periodically   
+    # Create plan to save the model periodically
+    # train_loss_epoch is the arithmetic mean of the loss from each step
+    # train_loss_epoch gets logged for the previous epoch   
+    # Do not use {train_epoch}! This is just the loss from the last step of the epoch.
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_dir,
-        filename='model-{epoch:02d}-{train_loss:.2f}-{F1:.2f}',
+        filename='model-{epoch:02d}-{train_loss_epoch:.2f}-{F1:.2f}',
         every_n_epochs=args.every_n_epochs, # Saves a checkpoint every n epochs 
         save_on_train_epoch_end=False, # Checkpointing runs at the end of validation
         save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
