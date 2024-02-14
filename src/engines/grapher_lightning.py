@@ -120,7 +120,6 @@ class LitGrapher(pl.LightningModule):
         
         # Both flags, on_step and on_epoch need to be True so that 
         # train_loss_epoch is accessible in ModelCheckpoint.
-        logging.info(f"Train_loss: {loss}")
         self.log('train_loss', loss, on_step=True, on_epoch=True,
                  logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
         
