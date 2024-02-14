@@ -116,9 +116,9 @@ def train(args, model_variant, device):
     # If three consecutive validation checks yield no improvement, the trainer stops.
     # Monitor validation loss to prevent overfitting
     early_stopping_callback = EarlyStopping(
-        monitor="F1",
+        monitor="train_loss_epoch",
         min_delta=0.005,
-        mode="max",
+        mode="min",
         patience=3  
     )
 

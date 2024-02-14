@@ -135,7 +135,6 @@ class LitGrapher(pl.LightningModule):
         and logs it to TensorBoard.
         """
         val_outputs = self.eval_step(batch, batch_idx, 'valid')
-        self.validation_step_outputs.append(val_outputs)
         return val_outputs  
     
     def on_validation_epoch_end(self):
@@ -149,7 +148,6 @@ class LitGrapher(pl.LightningModule):
         and logs it to TensorBoard.
         """
         val_outputs =  self.eval_step(batch, batch_idx, 'test')
-        self.validation_step_outputs.append(val_outputs)
         return val_outputs
     
     def on_test_epoch_end(self):
@@ -213,7 +211,10 @@ class LitGrapher(pl.LightningModule):
         for i, tb_str in enumerate(TB_str):
             self.logger.experiment.add_text(f'{split}_{self.global_rank}/{i}', tb_str, self.global_step)
 
-        return {'text_dec': text_dec, 'dec_target': dec_target, 'dec_pred': dec_pred}
+        val_outputs = {'text_dec': text_dec, 'dec_target': dec_target, 'dec_pred': dec_pred}
+        self.validation_step_outputs.append(val_outputs)
+        
+        return val_outputs
 
     # For validation and testing
     def eval_epoch_end(self, split):

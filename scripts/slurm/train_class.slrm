@@ -1,25 +1,37 @@
 #!/bin/bash
 #
-#SBATCH --job-name=train_gen_grapher
+#SBATCH --job-name=train_class_grapher
 #SBATCH --partition=zen2_0256_a40x2   # Specify the partition
 #SBATCH --qos=zen2_0256_a40x2   # Specify the quality of service (QoS)
-#SBATCH --nodes=2                    # Request number of nodes
-#SBATCH --ntasks-per-node=1     # Request one task per node
-#SBATCH --gpus-per-node=2            # Request GPUs per node
-
+#SBATCH --nodes=2                    # Request number of nodes. Needs to match with num_nodes below
+#SBATCH --ntasks-per-node=2     # Request two tasks per node. Must match with gpus-per-node
+#SBATCH --gpus-per-node=2        # Request GPUs per node
+#SBATCH --time=1-0
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-user=filip.kovacevic@tuwien.ac.at
 
 # Load environment variables
 cd ../../src && source .env 
 
-python3 main.py --run test \
-                --edges_as_classes 0 \
+srun python3 main.py --run train \
+                --edges_as_classes 1 \
                 --dataset webnlg \
+                --pretrained_model t5-large \
                 --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en \
-                --num_data_workers 15 \
+                --cache_dir ${STORAGE_DRIVE}/data/core/cache/grapher \
+                --num_data_workers 2 \
+                --every_n_epochs 1 \
                 --checkpoint_model_id -1 \
+                --max_nodes 8 \
+                --max_edges 7 \
+                --default_seq_len_node 20 \
+                --default_seq_len_edge 20 \
                 --batch_size 20 \
+                --lr 1e-4 \
+                --focal_loss_gamma 3 \
+                --dropout_rate 0.5 \
+                --num_layers 2 \
+                --eval_dump_only 0 \
                 --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output \
                 --accelerator gpu \
                 --max_epochs 100 \
