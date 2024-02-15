@@ -136,11 +136,11 @@ def train(args, model_variant, device):
                         num_nodes=args.num_nodes)
     
     # Start from last checkpoint or a specific checkpoint. 
-    last_model_path = last_model_path(eval_dir)
+    last_model_path_str = last_model_path(eval_dir)
     if args.checkpoint_model_id < 0:
-        checkpoint_model_path = os.path.join(last_model_path, 'checkpoints', 'last.ckpt')
+        checkpoint_model_path = os.path.join(last_model_path_str, 'checkpoints', 'last.ckpt')
     else:
-        checkpoint_model_path = os.path.join(last_model_path, 'checkpoints', f"model-epoch={args.epoch}-train_loss={args.train_loss}-F1={args.F1}.ckpt")
+        checkpoint_model_path = os.path.join(last_model_path_str, 'checkpoints', f"model-epoch={args.epoch}-train_loss={args.train_loss}-F1={args.F1}.ckpt")
 
     trainer.fit(model=grapher, 
                 datamodule=dm,
