@@ -27,7 +27,7 @@ srun python3 main.py --run train \
                 --default_seq_len_node 20 \
                 --default_seq_len_edge 20 \
                 --batch_size 20 \
-                --lr 1e-4 \
+                --lr 1e-2 \
                 --focal_loss_gamma 3 \
                 --dropout_rate 0.5 \
                 --num_layers 2 \

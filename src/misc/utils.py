@@ -5,7 +5,7 @@ import torch
 import networkx as nx
 import os
 import json
-
+import logging
 
 failed_node = 'failed node'
 failed_edge = 'failed edge'
@@ -242,3 +242,8 @@ def _decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
     return s
 
 
+def last_model_path(eval_dir: str) -> str:
+    output_dir_encoded = os.fsencode(eval_dir)
+    last_model = sorted(os.listdir(output_dir_encoded))[0]
+    logging.info(last_model)
+    return last_model

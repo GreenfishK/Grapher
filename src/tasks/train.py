@@ -1,5 +1,6 @@
 from data.webnlg.datamodule import GraphDataModule
 from engines.grapher_lightning import LitGrapher
+from misc.utils import last_model_path
 
 from pytorch_lightning import loggers as pl_loggers
 import pytorch_lightning as pl
@@ -13,26 +14,19 @@ import logging
 def train(args, model_variant, device):
 
     # Create directories for validations, tests and checkpoints
-    # str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+    training_start_tmstmp = str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
     eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
-    checkpoint_dir = os.path.join(eval_dir, 'checkpoints')
+    checkpoint_dir = os.path.join(eval_dir, training_start_tmstmp, 'checkpoints')
 
     os.makedirs(checkpoint_dir, exist_ok=True)
-    os.makedirs(os.path.join(eval_dir, 'valid'), exist_ok=True)
-    os.makedirs(os.path.join(eval_dir, 'test'), exist_ok=True)
+    os.makedirs(os.path.join(eval_dir, training_start_tmstmp, 'valid'), exist_ok=True)
+    os.makedirs(os.path.join(eval_dir, training_start_tmstmp, 'test'), exist_ok=True)
 
     # Logger for TensorBoard
     TB = pl_loggers.TensorBoardLogger(save_dir=args.default_root_dir,
                                       name='',
                                       version=args.dataset + '_model_variant=' + model_variant, 
                                       default_hp_metric=False)
-
-    # Start from last checkpoint or a specific checkpoint. 
-    if args.checkpoint_model_id < 0:
-        checkpoint_model_path = os.path.join(checkpoint_dir, 'last.ckpt')
-    else:
-        checkpoint_model_path = os.path.join(checkpoint_dir, f"model-epoch={args.epoch}-train_loss={args.train_loss}-F1={args.F1}.ckpt")
-
 
     # -------------------- Data module ---------------------
     dm = GraphDataModule(cache_dir=args.cache_dir,
@@ -140,6 +134,13 @@ def train(args, model_variant, device):
                         logger=TB,
                         callbacks=[checkpoint_callback, early_stopping_callback, RichProgressBar(10)],
                         num_nodes=args.num_nodes)
+    
+    # Start from last checkpoint or a specific checkpoint. 
+    last_model_path = last_model_path(eval_dir)
+    if args.checkpoint_model_id < 0:
+        checkpoint_model_path = os.path.join(last_model_path, 'checkpoints', 'last.ckpt')
+    else:
+        checkpoint_model_path = os.path.join(last_model_path, 'checkpoints', f"model-epoch={args.epoch}-train_loss={args.train_loss}-F1={args.F1}.ckpt")
 
     trainer.fit(model=grapher, 
                 datamodule=dm,
