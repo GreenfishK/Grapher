@@ -135,7 +135,7 @@ def train(args, model_variant, device):
         save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
         save_top_k=-1, # Save all models
     )
-    trainer.checkpoint_callbacks.append(checkpoint_callback)
+    trainer.callbacks.append(checkpoint_callback)
 
     # If three consecutive validation checks yield no improvement, the trainer stops.
     # Monitor validation loss to prevent overfitting
@@ -146,7 +146,7 @@ def train(args, model_variant, device):
         mode="max",
         patience=3  
     )
-    trainer.early_stopping_callbacks.append(early_stopping_callback)
+    trainer.callbacks.append(early_stopping_callback)
 
     # Logger for TensorBoard
     TB = pl_loggers.TensorBoardLogger(save_dir=eval_dir,
