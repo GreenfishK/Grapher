@@ -95,7 +95,6 @@ def train(args, model_variant, device):
                         log_every_n_steps=args.log_every_n_steps,
                         check_val_every_n_epoch=args.check_val_every_n_epoch,
                         # val_check_interval=0.10, # Just for debugging
-                        callbacks=[RichProgressBar(10)],
                         num_nodes=args.num_nodes)
     
     # Create and configure execution environment
@@ -135,7 +134,6 @@ def train(args, model_variant, device):
         save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
         save_top_k=-1, # Save all models
     )
-    trainer.callbacks.append(checkpoint_callback)
 
     # If three consecutive validation checks yield no improvement, the trainer stops.
     # Monitor validation loss to prevent overfitting
@@ -146,7 +144,10 @@ def train(args, model_variant, device):
         mode="max",
         patience=3  
     )
-    trainer.callbacks.append(early_stopping_callback)
+
+    # Set callbacks
+    trainer.callbacks = []
+    trainer.callbacks.append([RichProgressBar(10), checkpoint_callback, early_stopping_callback])
 
     # Logger for TensorBoard
     TB = pl_loggers.TensorBoardLogger(save_dir=eval_dir,
