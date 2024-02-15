@@ -52,8 +52,8 @@ class LitGrapher(pl.LightningModule):
                  noedge_cl,
                  edge_classes,
                  focal_loss_gamma,
-                 eval_dir,
                  lr,
+                 exec_dir = "./output"
                  ):
         super().__init__()
         self.save_hyperparameters()
@@ -86,7 +86,7 @@ class LitGrapher(pl.LightningModule):
         self.noedge_cl = noedge_cl
         self.nonode_id = nonode_id # not used?
         self.noedge_id = noedge_id 
-        self.eval_dir=eval_dir
+        self.exec_dir=exec_dir
         self.lr = lr 
         self.validation_step_outputs = [] 
 
@@ -237,7 +237,7 @@ class LitGrapher(pl.LightningModule):
         # Compute Precission, Recall, and F1, log them as JSON files and to LightningModule
         logging.info(f"Iteration: {self.global_step}; Rank: {self.global_rank}")
         scores = compute_scores(dec_pred_all, dec_target_all, self.global_step,
-                                self.eval_dir, split, self.global_rank)
+                                self.exec_dir, split, self.global_rank)
         
         # Log scores and accumulate accross devices (sync_dist=True)
         logging.info(f"Validation scores: Precision: {scores['Precision']}; Recall: {scores['Recall']}; F1: {scores['F1']}")

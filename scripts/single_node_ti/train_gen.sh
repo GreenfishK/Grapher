@@ -9,9 +9,9 @@ python3 main.py --run train \
                 --pretrained_model t5-large \
                 --data_path ${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en \
                 --cache_dir ${STORAGE_DRIVE}/data/core/cache/grapher \
-                --num_data_workers 1 \
+                --num_data_workers 15 \
                 --every_n_epochs 1 \
-                --checkpoint_model_id -1 \
+                --checkpoint_model_id -2 \
                 --max_nodes 8 \
                 --max_edges 7 \
                 --default_seq_len_node 20 \
@@ -29,11 +29,11 @@ python3 main.py --run train \
                 --num_sanity_val_steps 0 \
                 --fast_dev_run 0 \
                 --overfit_batches 0 \
-                --limit_train_batches 1.0 \
-                --limit_val_batches 1.0 \
+                --limit_train_batches 0.02 \
+                --limit_val_batches 0.02 \
                 --limit_test_batches 1.0 \
                 --accumulate_grad_batches 10 \
-                --log_every_n_steps 100 \
+                --log_every_n_steps 1 \
                 --check_val_every_n_epoch 1 
 
 # Problems with interpreting 0 as False in main.py

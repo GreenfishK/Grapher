@@ -5,7 +5,7 @@ import torch
 import networkx as nx
 import os
 import json
-import logging
+from datetime import datetime
 
 failed_node = 'failed node'
 failed_edge = 'failed edge'
@@ -241,9 +241,46 @@ def _decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
 
     return s
 
+def create_exec_dir(eval_dir: str, new_dir: bool) -> str:
+    """
+    If the flag `new_dir` is True or no last execution was found, 
+    a path for the new execution directory is built and a directory is created
+    which is named after the current timestamp.
+    If the there have been last executions, 
+    the path to the last execution directory will be returned.
+    """
+    eval_dir_encoded = os.fsencode(eval_dir)
+    
+    # Filter directories by timestamp format
+    valid_dirs = []
+    for directory in os.listdir(eval_dir_encoded):
+        try: 
+            timestamp = datetime.strptime(directory.decode(), '%Y-%m-%d %H:%M:%S')
+            valid_dirs.append((timestamp, directory))
+        except ValueError:
+            continue
+    
+    # new_dir = -2 .. itentiallaly new dir
+    # not valid_dirs = no training yet
+    if new_dir or not valid_dirs:
+        training_start_tmstmp = str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+        exec_dir = os.path.join(eval_dir, training_start_tmstmp)
+        os.makedirs(exec_dir, exist_ok=True)
+        os.makedirs(os.path.join(exec_dir, 'checkpoints'), exist_ok=True)
+        os.makedirs(os.path.join(exec_dir, 'valid'), exist_ok=True)
+        os.makedirs(os.path.join(exec_dir, 'test'), exist_ok=True)
+        return exec_dir
+    if valid_dirs:
+        last_exec_dir_b = max(valid_dirs, key=lambda x: x[0])[1]
+        return os.path.join(eval_dir, last_exec_dir_b.decode())
 
-def last_model_path(eval_dir: str) -> str:
-    output_dir_encoded = os.fsencode(eval_dir)
-    last_model = sorted(os.listdir(output_dir_encoded))[0]
-    logging.info(last_model)
-    return last_model
+
+
+def model_file_name(exec_dir: str, epoch: int) -> str:
+    """
+    Returns the file name of the model for a specific `epoch` that resides within `exec_dir/checkpoints`.
+    """
+    exec_dir_encoded = os.fsencode(exec_dir)
+    for model in os.listdir(os.path.join(exec_dir_encoded, "checkpoints")):
+        if model.startswith(f"model-epoch={str(epoch).zfill(2)}"):
+            return model

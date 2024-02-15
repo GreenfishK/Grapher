@@ -1,6 +1,6 @@
 from data.webnlg.datamodule import GraphDataModule
 from engines.grapher_lightning import LitGrapher
-from misc.utils import last_model_path
+from misc.utils import create_exec_dir, model_file_name
 
 from pytorch_lightning import loggers as pl_loggers
 import pytorch_lightning as pl
@@ -12,21 +12,6 @@ import torch
 import logging
 
 def train(args, model_variant, device):
-
-    # Create directories for validations, tests and checkpoints
-    training_start_tmstmp = str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
-    eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
-    checkpoint_dir = os.path.join(eval_dir, training_start_tmstmp, 'checkpoints')
-
-    os.makedirs(checkpoint_dir, exist_ok=True)
-    os.makedirs(os.path.join(eval_dir, training_start_tmstmp, 'valid'), exist_ok=True)
-    os.makedirs(os.path.join(eval_dir, training_start_tmstmp, 'test'), exist_ok=True)
-
-    # Logger for TensorBoard
-    TB = pl_loggers.TensorBoardLogger(save_dir=args.default_root_dir,
-                                      name='',
-                                      version=args.dataset + '_model_variant=' + model_variant, 
-                                      default_hp_metric=False)
 
     # -------------------- Data module ---------------------
     dm = GraphDataModule(cache_dir=args.cache_dir,
@@ -50,7 +35,7 @@ def train(args, model_variant, device):
     dm.setup(stage='validate')
 
     # -------------------- Engine incl. Model ---------------------
-    grapher = LitGrapher(eval_dir=eval_dir,
+    grapher = LitGrapher(exec_dir="Dummy",
                         cache_dir=args.cache_dir,
                         transformer_class=T5ForConditionalGeneration,
                         transformer_name=args.pretrained_model,
@@ -83,6 +68,7 @@ def train(args, model_variant, device):
     # disable randomness, dropout, etc...
     grapher.eval()
 
+
     # -------------------- Trainer ---------------------
 
     # Trade off precision for performance
@@ -93,28 +79,6 @@ def train(args, model_variant, device):
         if torch.cuda.get_device_name(i) in lst_tensor_devices:
            torch.set_float32_matmul_precision('high')
            break
-
-    # Create plan to save the model periodically.
-    # {train_loss_epoch} is the arithmetic mean of {train_loss} from each step.
-    # {train_loss_epoch} gets logged for the previous epoch .  
-    # Do not use {train_epoch}! This is just the loss from the last step of the epoch.
-    checkpoint_callback = ModelCheckpoint(
-        dirpath=checkpoint_dir,
-        filename='model-{epoch:02d}-{train_loss_epoch:.2f}-{F1:.2f}',
-        every_n_epochs=args.every_n_epochs, # Saves a checkpoint every n epochs 
-        save_on_train_epoch_end=False, # Checkpointing runs at the end of validation
-        save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
-        save_top_k=-1, # Save all models
-    )
-
-    # If three consecutive validation checks yield no improvement, the trainer stops.
-    # Monitor validation loss to prevent overfitting
-    early_stopping_callback = EarlyStopping(
-        monitor="train_loss_epoch",
-        min_delta=0.005,
-        mode="min",
-        patience=3  
-    )
 
     # Validation checks are done every check_val_every_n_epoch epoch.
     trainer = pl.Trainer(default_root_dir=args.default_root_dir,
@@ -131,18 +95,67 @@ def train(args, model_variant, device):
                         log_every_n_steps=args.log_every_n_steps,
                         check_val_every_n_epoch=args.check_val_every_n_epoch,
                         # val_check_interval=0.10, # Just for debugging
-                        logger=TB,
-                        callbacks=[checkpoint_callback, early_stopping_callback, RichProgressBar(10)],
+                        callbacks=[RichProgressBar(10)],
                         num_nodes=args.num_nodes)
     
-    # Start from last checkpoint or a specific checkpoint. 
-    last_model_path_str = last_model_path(eval_dir)
-    if args.checkpoint_model_id < 0:
-        checkpoint_model_path = os.path.join(last_model_path_str, 'checkpoints', 'last.ckpt')
+    # Create and configure execution environment
+    eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
+    exec_dir = create_exec_dir(eval_dir, new_dir = True if trainer.global_rank == 0 
+                               and args.checkpoint_model_id < -1 else False)
+    checkpoint_dir = os.path.join(exec_dir, 'checkpoints')
+    
+    # The training starts from scratch
+    if args.checkpoint_model_id < -1:
+        logging.info(f"Starting new training in location: {exec_dir}")
+        checkpoint_model_path = None
+    # The training resumes from the last checkpoint of the last execution of model variant `model_variant`
+    elif args.checkpoint_model_id == -1:
+        logging.info(f"Resuming training from location: {exec_dir}")
+        checkpoint_model_path = os.path.join(checkpoint_dir, 'last.ckpt')
+    # The training resumes from a specific epoch checkpoint of the last execution of model variant `model_variant`
     else:
-        checkpoint_model_path = os.path.join(last_model_path_str, 'checkpoints', f"model-epoch={args.epoch}-train_loss={args.train_loss}-F1={args.F1}.ckpt")
+        logging.info(f"Resuming training from location: {exec_dir} and model at epoch {args.checkpoint_model_id}")
+        checkpoint_model_path = os.path.join(exec_dir,
+                                            'checkpoints',
+                                            model_file_name(exec_dir, args.checkpoint_model_id))
+    if checkpoint_model_path is None or not os.path.exists(checkpoint_model_path):
+        checkpoint_model_path = None
+    
+    grapher.exec_dir = exec_dir
+    
+    # Create plan to save the model periodically.
+    # {train_loss_epoch} is the arithmetic mean of {train_loss} from each step.
+    # {train_loss_epoch} gets logged for the previous epoch .  
+    # Do not use {train_epoch}! This is just the loss from the last step of the epoch.
+    checkpoint_callback = ModelCheckpoint(
+        dirpath=checkpoint_dir,
+        filename='model-{epoch:02d}-{train_loss_epoch:.2f}-{F1:.2f}',
+        every_n_epochs=args.every_n_epochs, # Saves a checkpoint every n epochs 
+        save_on_train_epoch_end=False, # Checkpointing runs at the end of validation
+        save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
+        save_top_k=-1, # Save all models
+    )
+    trainer.checkpoint_callbacks.append(checkpoint_callback)
+
+    # If three consecutive validation checks yield no improvement, the trainer stops.
+    # Monitor validation loss to prevent overfitting
+    # WARNING: train_loss_epoch is not available!
+    early_stopping_callback = EarlyStopping(
+        monitor="F1",
+        min_delta=0.005,
+        mode="max",
+        patience=3  
+    )
+    trainer.early_stopping_callbacks.append(early_stopping_callback)
+
+    # Logger for TensorBoard
+    TB = pl_loggers.TensorBoardLogger(save_dir=eval_dir,
+                                      name='',
+                                      version=exec_dir.split('/')[-1], 
+                                      default_hp_metric=False)
+    trainer.logger = TB
 
     trainer.fit(model=grapher, 
                 datamodule=dm,
-                ckpt_path=checkpoint_model_path if os.path.exists(checkpoint_model_path) else None)    
+                ckpt_path=checkpoint_model_path)    
         
