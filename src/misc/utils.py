@@ -6,6 +6,11 @@ import networkx as nx
 import os
 import json
 from datetime import datetime
+import logging
+import time
+import fcntl
+import psutil
+import sys
 
 failed_node = 'failed node'
 failed_edge = 'failed edge'
@@ -241,17 +246,21 @@ def _decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
 
     return s
 
-def create_exec_dir(eval_dir: str, new_dir: bool) -> str:
+
+def create_exec_dir(eval_dir: str, from_scratch: bool) -> str:
     """
-    If the flag `new_dir` is True or no last execution was found, 
-    a path for the new execution directory is built and a directory is created
-    which is named after the current timestamp.
+    Create a new execution directory which is named after the current timestamp and create 
+    subdiretories for the checkpoints as well as validation and test outputs. 
+    This is only done if  the flag `from_scratch` is True or no last execution was found, 
     If the there have been last executions, 
     the path to the last execution directory will be returned.
+
+    Returns:
+        The path the the new or existing exectution directory.
     """
-    eval_dir_encoded = os.fsencode(eval_dir)
-    
+
     # Filter directories by timestamp format
+    eval_dir_encoded = os.fsencode(eval_dir)
     valid_dirs = []
     for directory in os.listdir(eval_dir_encoded):
         try: 
@@ -260,16 +269,19 @@ def create_exec_dir(eval_dir: str, new_dir: bool) -> str:
         except ValueError:
             continue
     
-    # new_dir = -2 .. itentiallaly new dir
+    # from_scratch = -2 .. itentiallaly new dir
     # not valid_dirs = no training yet
-    if new_dir or not valid_dirs:
+    if from_scratch or not valid_dirs:
         training_start_tmstmp = str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
         exec_dir = os.path.join(eval_dir, training_start_tmstmp)
         os.makedirs(exec_dir, exist_ok=True)
         os.makedirs(os.path.join(exec_dir, 'checkpoints'), exist_ok=True)
         os.makedirs(os.path.join(exec_dir, 'valid'), exist_ok=True)
         os.makedirs(os.path.join(exec_dir, 'test'), exist_ok=True)
+
+        logging.info(f"Created new directory: {exec_dir} with three sub directories")
         return exec_dir
+    
     if valid_dirs:
         last_exec_dir_b = max(valid_dirs, key=lambda x: x[0])[1]
         return os.path.join(eval_dir, last_exec_dir_b.decode())
@@ -284,3 +296,29 @@ def model_file_name(exec_dir: str, epoch: int) -> str:
     for model in os.listdir(os.path.join(exec_dir_encoded, "checkpoints")):
         if model.startswith(f"model-epoch={str(epoch).zfill(2)}"):
             return model
+
+
+
+def acquire_lock(lock_file):
+    # Try to acquire the lock, waiting for 1 second
+    logging.info("open lock file")
+    lock_fd = open(lock_file, 'w')
+    while True:
+        try:
+            logging.info("Perform lock operation")
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            break
+        except IOError:
+            time.sleep(1)
+    return lock_fd
+
+def release_lock(lock_fd):
+    fcntl.flock(lock_fd, fcntl.LOCK_UN)
+    lock_fd.close()
+
+
+def get_current_script_processes():
+    pid = os.getpid()
+    ppid = os.getppid()
+    running_file_name = __file__
+    return ppid, pid, running_file_name

@@ -1,18 +1,19 @@
 from data.webnlg.datamodule import GraphDataModule
 from engines.grapher_lightning import LitGrapher
-from misc.utils import create_exec_dir, model_file_name
+from misc.utils import create_exec_dir, model_file_name, get_current_script_processes
 
 from pytorch_lightning import loggers as pl_loggers
 import pytorch_lightning as pl
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 import os
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar, EarlyStopping
-from datetime import datetime
 import torch
 import logging
 
+
 def train(args, model_variant, device):
 
+    logging.info(get_current_script_processes())
     # -------------------- Data module ---------------------
     dm = GraphDataModule(cache_dir=args.cache_dir,
                             data_path=args.data_path,
@@ -35,7 +36,12 @@ def train(args, model_variant, device):
     dm.setup(stage='validate')
 
     # -------------------- Engine incl. Model ---------------------
-    grapher = LitGrapher(exec_dir="Dummy",
+    # Create execution environment for training, validation and test output files
+
+    eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
+    exec_dir = create_exec_dir(eval_dir, from_scratch = True if args.checkpoint_model_id < -1 else False)
+
+    grapher = LitGrapher(exec_dir=exec_dir,
                         cache_dir=args.cache_dir,
                         transformer_class=T5ForConditionalGeneration,
                         transformer_name=args.pretrained_model,
@@ -77,55 +83,14 @@ def train(args, model_variant, device):
     for i in range(cnt_devices):
         logging.info(torch.cuda.get_device_name(i))
         if torch.cuda.get_device_name(i) in lst_tensor_devices:
-           torch.set_float32_matmul_precision('high')
-           break
-
-    # Validation checks are done every check_val_every_n_epoch epoch.
-    trainer = pl.Trainer(default_root_dir=args.default_root_dir,
-                        accelerator=args.accelerator, 
-                        max_epochs=args.max_epochs,
-                        num_sanity_val_steps=args.num_sanity_val_steps,
-                        fast_dev_run=args.fast_dev_run,
-                        overfit_batches=args.overfit_batches,
-                        limit_train_batches=args.limit_train_batches,
-                        limit_val_batches=args.limit_val_batches,
-                        limit_test_batches=args.limit_test_batches,
-                        accumulate_grad_batches=args.accumulate_grad_batches,
-                        detect_anomaly=args.detect_anomaly,
-                        log_every_n_steps=args.log_every_n_steps,
-                        check_val_every_n_epoch=args.check_val_every_n_epoch,
-                        # val_check_interval=0.10, # Just for debugging
-                        num_nodes=args.num_nodes)
-    
-    # Create and configure execution environment
-    eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
-    exec_dir = create_exec_dir(eval_dir, new_dir = True if trainer.global_rank == 0 
-                               and args.checkpoint_model_id < -1 else False)
-    checkpoint_dir = os.path.join(exec_dir, 'checkpoints')
-    
-    # The training starts from scratch
-    if args.checkpoint_model_id < -1:
-        logging.info(f"Starting new training in location: {exec_dir}")
-        checkpoint_model_path = None
-    # The training resumes from the last checkpoint of the last execution of model variant `model_variant`
-    elif args.checkpoint_model_id == -1:
-        logging.info(f"Resuming training from location: {exec_dir}")
-        checkpoint_model_path = os.path.join(checkpoint_dir, 'last.ckpt')
-    # The training resumes from a specific epoch checkpoint of the last execution of model variant `model_variant`
-    else:
-        logging.info(f"Resuming training from location: {exec_dir} and model at epoch {args.checkpoint_model_id}")
-        checkpoint_model_path = os.path.join(exec_dir,
-                                            'checkpoints',
-                                            model_file_name(exec_dir, args.checkpoint_model_id))
-    if checkpoint_model_path is None or not os.path.exists(checkpoint_model_path):
-        checkpoint_model_path = None
-    
-    grapher.exec_dir = exec_dir
+            torch.set_float32_matmul_precision('high')
+            break
     
     # Create plan to save the model periodically.
     # {train_loss_epoch} is the arithmetic mean of {train_loss} from each step.
     # {train_loss_epoch} gets logged for the previous epoch .  
     # Do not use {train_epoch}! This is just the loss from the last step of the epoch.
+    checkpoint_dir = os.path.join(exec_dir, 'checkpoints')
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_dir,
         filename='model-{epoch:02d}-{train_loss_epoch:.2f}-{F1:.2f}',
@@ -145,18 +110,47 @@ def train(args, model_variant, device):
         patience=3  
     )
 
-    # Set callbacks
-    trainer.callbacks = []
-    trainer.callbacks.append([RichProgressBar(10), checkpoint_callback, early_stopping_callback])
-
     # Logger for TensorBoard
     TB = pl_loggers.TensorBoardLogger(save_dir=eval_dir,
-                                      name='',
-                                      version=exec_dir.split('/')[-1], 
-                                      default_hp_metric=False)
-    trainer.logger = TB
+                                    name='',
+                                    version=exec_dir.split('/')[-1], 
+                                    default_hp_metric=False)
+    
+    # Validation checks are done every check_val_every_n_epoch epoch.
+    trainer = pl.Trainer(default_root_dir=args.default_root_dir,
+                        accelerator=args.accelerator, 
+                        max_epochs=args.max_epochs,
+                        num_sanity_val_steps=args.num_sanity_val_steps,
+                        fast_dev_run=args.fast_dev_run,
+                        overfit_batches=args.overfit_batches,
+                        limit_train_batches=args.limit_train_batches,
+                        limit_val_batches=args.limit_val_batches,
+                        limit_test_batches=args.limit_test_batches,
+                        accumulate_grad_batches=args.accumulate_grad_batches,
+                        detect_anomaly=args.detect_anomaly,
+                        log_every_n_steps=args.log_every_n_steps,
+                        check_val_every_n_epoch=args.check_val_every_n_epoch,
+                        num_nodes=args.num_nodes,
+                        callbacks=[RichProgressBar(10), checkpoint_callback, early_stopping_callback],
+                        logger=TB)
+    
+    # The training starts from scratch
+    if args.checkpoint_model_id < -1:
+        logging.info(f"Starting new training in location: {exec_dir}")
+        checkpoint_model_path = None
+    # The training resumes from the last checkpoint of the last execution of model variant `model_variant`
+    elif args.checkpoint_model_id == -1:
+        logging.info(f"Resuming training from location: {exec_dir}")
+        checkpoint_model_path = os.path.join(checkpoint_dir, 'last.ckpt')
+    # The training resumes from a specific epoch checkpoint of the last execution of model variant `model_variant`
+    else:
+        logging.info(f"Resuming training from location: {exec_dir} and model at epoch {args.checkpoint_model_id}")
+        checkpoint_model_path = os.path.join(exec_dir,
+                                            'checkpoints',
+                                            model_file_name(exec_dir, args.checkpoint_model_id))
+    if checkpoint_model_path is None or not os.path.exists(checkpoint_model_path):
+        checkpoint_model_path = None
 
     trainer.fit(model=grapher, 
                 datamodule=dm,
                 ckpt_path=checkpoint_model_path)    
-        
