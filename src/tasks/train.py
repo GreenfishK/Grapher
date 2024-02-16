@@ -86,8 +86,8 @@ def train(args, model_variant, device):
             break
     
     # Create plan to save the model periodically.
-    # {train_loss_epoch} is the arithmetic mean of {train_loss} from each step.
     # {train_loss_epoch} gets logged for the previous epoch .  
+    # {train_loss_epoch} is the weighted average over the batch_size of the values logged in each training_step
     # Do not use {train_epoch}! This is just the loss from the last step of the epoch.
     checkpoint_dir = os.path.join(exec_dir, 'checkpoints')
     checkpoint_callback = ModelCheckpoint(

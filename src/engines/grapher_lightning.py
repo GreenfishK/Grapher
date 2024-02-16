@@ -5,9 +5,7 @@ import torch
 import pytorch_lightning as pl
 import torch.nn.functional as F
 import torch.nn as nn
-import os
 import logging
-
 
 #def sorted_ls(path):
 #    mtime = lambda f: os.stat(os.path.join(path, f)).st_mtime
@@ -89,6 +87,7 @@ class LitGrapher(pl.LightningModule):
         self.exec_dir=exec_dir
         self.lr = lr 
         self.validation_step_outputs = [] 
+        self.training_step_outputs = []
 
     # Override
     def training_step(self, batch, batch_idx):
@@ -123,6 +122,8 @@ class LitGrapher(pl.LightningModule):
         self.log('train_loss', loss, on_step=True, on_epoch=True,
                  logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
         
+        self.training_step_outputs.append(loss) 
+
         # Free up GPU memory
         torch.cuda.empty_cache()
         
