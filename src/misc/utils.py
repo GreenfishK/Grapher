@@ -7,10 +7,6 @@ import os
 import json
 from datetime import datetime
 import logging
-import time
-import fcntl
-import psutil
-import sys
 
 failed_node = 'failed node'
 failed_edge = 'failed edge'
@@ -247,7 +243,7 @@ def _decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
     return s
 
 
-def create_exec_dir(eval_dir: str, from_scratch: bool) -> str:
+def create_exec_dir(eval_dir: str, cache_dir, from_scratch: bool) -> str:
     """
     Create a new execution directory which is named after the current timestamp and create 
     subdiretories for the checkpoints as well as validation and test outputs. 
@@ -268,10 +264,11 @@ def create_exec_dir(eval_dir: str, from_scratch: bool) -> str:
             valid_dirs.append((timestamp, directory))
         except ValueError:
             continue
-    
+
     # from_scratch = -2 .. itentiallaly new dir
     # not valid_dirs = no training yet
-    if from_scratch or not valid_dirs:
+    forked = _is_forked(cache_dir)
+    if not forked and (from_scratch or not valid_dirs):
         training_start_tmstmp = str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
         exec_dir = os.path.join(eval_dir, training_start_tmstmp)
         os.makedirs(exec_dir, exist_ok=True)
@@ -298,27 +295,23 @@ def model_file_name(exec_dir: str, epoch: int) -> str:
             return model
 
 
+def _is_forked(cache_dir):
+    """
+    Returns whether the current process has been forked.
+    """
 
-def acquire_lock(lock_file):
-    # Try to acquire the lock, waiting for 1 second
-    logging.info("open lock file")
-    lock_fd = open(lock_file, 'w')
-    while True:
-        try:
-            logging.info("Perform lock operation")
-            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            break
-        except IOError:
-            time.sleep(1)
-    return lock_fd
+    # Clean up file from previous runs
 
-def release_lock(lock_fd):
-    fcntl.flock(lock_fd, fcntl.LOCK_UN)
-    lock_fd.close()
+    # Log process ID
+    current_process = os.getpid()
+    with open(f"{cache_dir}/processes", "a") as processes:
+        processes.write(str(current_process) + "\n")
 
-
-def get_current_script_processes():
-    pid = os.getpid()
-    ppid = os.getppid()
-    running_file_name = __file__
-    return ppid, pid, running_file_name
+    forked = False
+    processes = open(f"{cache_dir}/processes", "r")
+    for line in processes.readlines():
+        logging.info(f"Process ID: {line}; Parent ID: {os.getppid()}")
+        if int(line) == os.getppid():
+            forked = True
+            return forked
+    

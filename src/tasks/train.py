@@ -1,6 +1,6 @@
 from data.webnlg.datamodule import GraphDataModule
 from engines.grapher_lightning import LitGrapher
-from misc.utils import create_exec_dir, model_file_name, get_current_script_processes
+from misc.utils import create_exec_dir, model_file_name
 
 from pytorch_lightning import loggers as pl_loggers
 import pytorch_lightning as pl
@@ -13,7 +13,6 @@ import logging
 
 def train(args, model_variant, device):
 
-    logging.info(get_current_script_processes())
     # -------------------- Data module ---------------------
     dm = GraphDataModule(cache_dir=args.cache_dir,
                             data_path=args.data_path,
@@ -39,7 +38,7 @@ def train(args, model_variant, device):
     # Create execution environment for training, validation and test output files
 
     eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
-    exec_dir = create_exec_dir(eval_dir, from_scratch = True if args.checkpoint_model_id < -1 else False)
+    exec_dir = create_exec_dir(eval_dir, args.cache_dir, from_scratch = True if args.checkpoint_model_id < -1 else False)
 
     grapher = LitGrapher(exec_dir=exec_dir,
                         cache_dir=args.cache_dir,

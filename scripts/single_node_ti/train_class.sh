@@ -11,7 +11,7 @@ python3 main.py --run train \
                 --cache_dir ${STORAGE_DRIVE}/data/core/cache/grapher \
                 --num_data_workers 15 \
                 --every_n_epochs 1 \
-                --checkpoint_model_id -1 \
+                --checkpoint_model_id -2 \
                 --max_nodes 8 \
                 --max_edges 7 \
                 --default_seq_len_node 20 \
