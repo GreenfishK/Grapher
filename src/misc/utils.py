@@ -17,10 +17,11 @@ nonode_str = '__no_node__'
 
 def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edges, edges_as_classes, focal_loss_gamma):
     """
-    This function computes the loss for the model during training. 
-    It computes the cross-entropy loss for nodes and edges separately 
+    Compute the loss for the model during training. 
+    Compute the cross-entropy loss for nodes and edges separately 
     and returns their sum as the total loss. In case focal_loss_gamma is not None, 
-    it computes the focal loss for edges.
+    compute the focal loss for edges.
+
     Args:
         * criterion: Dictionary containing the loss functions for nodes and edges.
         * logits_nodes: Logits for nodes predicted by the model.
@@ -31,6 +32,7 @@ def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edg
         * focal_loss_gamma: Parameter for the focal loss function.
     
     """
+
     # --------- Node Loss ---   ------
     # shift forward 1 step to create labels
     # The shift ensures that the lengths of the predicted logits 
@@ -75,6 +77,7 @@ def compute_scores(hyp, ref, iteration, eval_dir, split, rank):
         The evaluation scores as dict.
 
     """
+
     refs = [[' | '.join(i) for i in t] for t in ref]
     hyps = [[' | '.join(i) for i in t] for t in hyp]
     categories = [' '] * len(refs)
@@ -93,16 +96,20 @@ def compute_scores(hyp, ref, iteration, eval_dir, split, rank):
 
 def decode_text(tokenizer, text_input_ids, bos_token_id, eos_token_id):
     """
-    This function decodes a batch of text sequences represented as token IDs into a list of strings.
+    Decode a batch of text sequences represented as token IDs into a list of strings.
+
     Args:
         * tokenizer: Tokenizer object for decoding.
         * text_input_ids: Batch of input token IDs.
         * bos_token_id: Token ID for the beginning-of-sequence token.
         * eos_token_id: Token ID for the end-of-sequence token.
-    It iterates over each text sequence in the batch, finds the beginning-of-sequence and end-of-sequence tokens, 
+
+    Steps:
+    * It iterates over each text sequence in the batch, finds the beginning-of-sequence and end-of-sequence tokens, 
     and decodes the text between them using the tokenizer.
-    It returns a list of decoded text strings.
+    * It returns a list of decoded text strings.
     """
+    
     text_decoded = []
 
     for text in text_input_ids:
@@ -117,9 +124,10 @@ def decode_text(tokenizer, text_input_ids, bos_token_id, eos_token_id):
 def decode_graph(tokenizer, edge_classes, bnodes, bedges, edges_as_classes, node_sep_id,
                  max_nodes, noedge_cl, noedge_id, bos_token_id, eos_token_id):
     """
-    This function decodes a batch of node and edge tokens into a list of triples.
-    It constructs a directed graph using NetworkX library based on the input node and edge sequences.
-    It decodes the nodes and edges into strings and forms triples.
+    Decode a batch of node and edge tokens into a list of triples.
+    Construct a directed graph using NetworkX library based on the input node and edge sequences.
+    Decode the nodes and edges into strings and forms triples.
+
     Args:
         * tokenizer: Tokenizer object for decoding.
         * edge_classes: List of edge classes.
@@ -132,10 +140,12 @@ def decode_graph(tokenizer, edge_classes, bnodes, bedges, edges_as_classes, node
         * noedge_id: Token ID representing no edge.
         * bos_token_id: Token ID for the beginning-of-sequence token.
         * eos_token_id: Token ID for the end-of-sequence token.
+    
     Returns:
         * A list of decoded triples for each graph in the batch.
 
     """
+
     if edges_as_classes:
         bedges = bedges.permute(2, 0, 1)
     else:
@@ -220,17 +230,21 @@ def decode_graph(tokenizer, edge_classes, bnodes, bedges, edges_as_classes, node
 # Helper function for the decode_graph function.
 def _decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
     """
-    This function decodes a sequence of tokens into a string.
+    Decode a sequence of tokens into a string.
+
     Args:
         * cand: Tensor representing the sequence of tokens.
         * bos_token_id: Token ID for the beginning-of-sequence token.
         * eos_token_id: Token ID for the end-of-sequence token.
         * tokenizer: Tokenizer object for decoding.
         * failed: String to return if decoding fails.
-    It first finds the indices of the beginning-of-sequence and end-of-sequence tokens in the tensor.
+    
+    Steps:
+    * It first finds the indices of the beginning-of-sequence and end-of-sequence tokens in the tensor.
     Then, it decodes the sequence between these tokens using the tokenizer.
-    If decoding fails (no beginning-of-sequence token found), it returns the failed string.
+    * If decoding fails (no beginning-of-sequence token found), it returns the failed string.
     """
+
     bos_mask = (cand == bos_token_id).nonzero(as_tuple=False)
     if len(bos_mask) > 0:
         eos_mask = (cand == eos_token_id).nonzero(as_tuple=False)
@@ -248,9 +262,11 @@ def setup_exec_env(eval_dir: str, cache_dir: str, from_scratch: bool) -> str:
     """
     Create a new execution directory which is named after the current timestamp and create 
     subdiretories for the checkpoints as well as validation and test outputs. 
-    This is only done if  the flag `from_scratch` is True or no last execution was found, 
+    This is only done if the flag `from_scratch` is True or no last execution was found, 
     If the there have been last executions, 
     the path to the last execution directory will be returned.
+    Using a lock mechanism, it prevents parallel processes from creating another new execution directory, 
+    if one process has created one already.
 
     Returns:
         The path the the new or existing exectution directory.

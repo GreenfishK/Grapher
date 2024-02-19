@@ -94,12 +94,13 @@ class LitGrapher(pl.LightningModule):
         """
         Generate (unnormalized) predictions for nodes and edges of `batch`, computes
         the training loss and logs it.
-        * Unpack batch.
-        * Generate (unnormalized) predictions for nodes and edges.
-        * Compute and log loss.
 
         Args from Trainer class that impact this step:
         * log_every_n_steps: Logs every n training steps, i.e. every n batches.
+        
+        * Unpack batch.
+        * Generate (unnormalized) predictions for nodes and edges.
+        * Compute and log loss.
 
         Returns: 
             * loss
@@ -138,6 +139,7 @@ class LitGrapher(pl.LightningModule):
         Creates a formatted string of target and predicted triples for `batch` of the validation set 
         and logs it to TensorBoard.
         """
+
         val_outputs = self.eval_step(batch, batch_idx, 'valid')
         return val_outputs  
     
@@ -151,6 +153,7 @@ class LitGrapher(pl.LightningModule):
         Creates a formatted string of target and predicted triples for `batch` of the test set 
         and logs it to TensorBoard.
         """
+
         val_outputs =  self.eval_step(batch, batch_idx, 'test')
         return val_outputs
     
@@ -169,9 +172,12 @@ class LitGrapher(pl.LightningModule):
     # For validation and testing
     def eval_step(self, batch, batch_idx, split):
         """
-        Create a formatted string of target and predicted triples of `batch` 
-        for the first batch (`batch_idx`=0) and logs it to TensorBoard.
+        Create a formatted string of target and predicted triples of `batch` and log it to TensorBoard.
+        for the first batch (`batch_idx`=0) and log it to TensorBoard. Also, append 
+        validation outputs to `self.validation_step_outputs` so that they become accessible 
+        at the end of the validation or test epoch.
 
+        Steps:
         * Unpack `batch`.
         * Decode batch of text tokens into a list of strings.
         * Decode batch of node and edge tokens from the target/ground truth graph into a list of triples.
@@ -179,6 +185,7 @@ class LitGrapher(pl.LightningModule):
         * Prepares a formatted representation of target and predicted triples from the batch for TensorBoard.
         * Logs the string to TensorBoard.
         """
+        
         logging.info("Entering evaluation step")
 
         # target_nodes: batch_size X seq_len_node ?
