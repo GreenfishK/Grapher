@@ -18,9 +18,8 @@ nonode_str = '__no_node__'
 def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edges, edges_as_classes, focal_loss_gamma):
     """
     Compute the loss for the model during training. 
-    Compute the cross-entropy loss for nodes and edges separately 
-    and returns their sum as the total loss. In case focal_loss_gamma is not None, 
-    compute the focal loss for edges.
+    Compute the cross-entropy loss for nodes and edges separately. 
+    In case focal_loss_gamma is passed, compute the focal loss for edges instead.
 
     Args:
         * criterion: Dictionary containing the loss functions for nodes and edges.
@@ -30,6 +29,9 @@ def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edg
         * target_edges: Ground truth labels for edges.
         * edges_as_classes: Boolean indicating whether edges are treated as classes or not.
         * focal_loss_gamma: Parameter for the focal loss function.
+    
+    Returns:
+        The total loss as the sum of `loss_nodes` and `loss_edges`.
     
     """
 
@@ -109,7 +111,7 @@ def decode_text(tokenizer, text_input_ids, bos_token_id, eos_token_id):
     and decodes the text between them using the tokenizer.
     * It returns a list of decoded text strings.
     """
-    
+
     text_decoded = []
 
     for text in text_input_ids:

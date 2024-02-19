@@ -78,13 +78,14 @@ def train(args, model_variant, device):
         # -------------------- Trainer ---------------------
 
         # Trade off precision for performance
-        lst_tensor_devices = ['NVIDIA A40', 'NVIDIA A100', 'NVIDIA A100-PCIE-40GB']
-        cnt_devices = torch.cuda.device_count()
-        for i in range(cnt_devices):
-            logging.info(torch.cuda.get_device_name(i))
-            if torch.cuda.get_device_name(i) in lst_tensor_devices:
-                torch.set_float32_matmul_precision('high')
-                break
+        if args.prec_perf_tradeoff == 1:
+            lst_tensor_devices = ['NVIDIA A40', 'NVIDIA A100', 'NVIDIA A100-PCIE-40GB']
+            cnt_devices = torch.cuda.device_count()
+            for i in range(cnt_devices):
+                logging.info(torch.cuda.get_device_name(i))
+                if torch.cuda.get_device_name(i) in lst_tensor_devices:
+                    torch.set_float32_matmul_precision('high')
+                    break
         
         # Create plan to save the model periodically.
         # {train_loss_epoch} gets logged for the previous epoch .  

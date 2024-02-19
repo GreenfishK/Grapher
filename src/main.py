@@ -40,6 +40,7 @@ parser.add_argument("--dataset", type=str, default='webnlg')
 parser.add_argument('--data_path', type=str, default='')
 parser.add_argument('--checkpoint_model_id', type=int, default=-1)
 parser.add_argument('--batch_size', type=int, default=10)
+parser.add_argument('--prec_perf_tradeoff', type=int, default=0)
 parser.add_argument("--inference_input_text", type=str,
                     default='Danielle Harris had a main role in Super Capers, a 98 minute long movie.') 
 

@@ -7,10 +7,6 @@ import torch.nn.functional as F
 import torch.nn as nn
 import logging
 
-#def sorted_ls(path):
-#    mtime = lambda f: os.stat(os.path.join(path, f)).st_mtime
-#    return list(sorted(os.listdir(path), key=mtime))
-
 
 class FocalLoss(nn.modules.loss._WeightedLoss):
 
@@ -185,7 +181,7 @@ class LitGrapher(pl.LightningModule):
         * Prepares a formatted representation of target and predicted triples from the batch for TensorBoard.
         * Logs the string to TensorBoard.
         """
-        
+
         logging.info("Entering evaluation step")
 
         # target_nodes: batch_size X seq_len_node ?

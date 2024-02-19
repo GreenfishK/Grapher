@@ -1,0 +1,3 @@
+#!/bin/bash
+# Use the files in Grapher/scripts to submit main.py as SLURM job.
+srun python3 main.py $@
