@@ -1,0 +1,55 @@
+[nltk_data] Downloading package punkt to /gpfs/data/fs72332/fkovacev/d
+[nltk_data]     ata/core/grapher/output/../lib/punkt...
+[nltk_data]   Package punkt is already up-to-date!
+Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+2024-02-16 17:19:52 root INFO: Load training data into GraphDataset.
+2024-02-16 17:19:53 root INFO: Load validation data (dev) into GraphDataset.
+2024-02-16 17:19:53 root INFO: Process ID: 3259069
+; Parent ID: 3259194
+2024-02-16 17:19:53 root INFO: Process ID: 3259223
+; Parent ID: 3259194
+2024-02-16 17:19:53 root INFO: Created new directory: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-16 17:19:53 with three sub directories
+2024-02-16 17:19:54 torch.distributed.nn.jit.instantiator INFO: Created a temporary directory at /tmp/tmp7lco6s0h
+2024-02-16 17:19:54 torch.distributed.nn.jit.instantiator INFO: Writing /tmp/tmp7lco6s0h/_remote_module_non_scriptable.py
+2024-02-16 17:19:56 root INFO: NVIDIA A40
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+`Trainer(limit_train_batches=1.0)` was configured so 100% of the batches per epoch will be used..
+`Trainer(limit_val_batches=1.0)` was configured so 100% of the batches will be used..
+`Trainer(limit_test_batches=1.0)` was configured so 100% of the batches will be used..
+2024-02-16 17:19:57 root INFO: Starting new training in location: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-16 17:19:53
+2024-02-16 17:19:58 root INFO: Load training data into GraphDataset.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+┏━━━┳━━━━━━━┳━━━━━━━━━┳━━━━━━━━┓
+┃   ┃ Name  ┃ Type    ┃ Params ┃
+┡━━━╇━━━━━━━╇━━━━━━━━━╇━━━━━━━━┩
+│ 0 │ model │ Grapher │  738 M │
+└───┴───────┴─────────┴────────┘
+Trainable params: 738 M                                                         
+Non-trainable params: 0                                                         
+Total params: 738 M                                                             
+Total estimated model params size (MB): 3.0 K                                   
+SLURM auto-requeueing enabled. Setting signal handlers.
+2024-02-16 17:43:37 root INFO: Iteration: 178; Rank: 0
+2024-02-16 17:52:48 root INFO: Validation scores: Precision: 7.565441065214101e-05; Recall: 7.565441065214101e-05; F1: 7.565441065214101e-05
+2024-02-16 17:52:48 root INFO: Validation epoch ended
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-16 17:19:53/valid/ref_178_0.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-16 17:19:53/valid/hyp_178_0.xml]
+2024-02-16 18:16:12 root INFO: Iteration: 356; Rank: 0
+2024-02-16 18:27:07 root INFO: Validation scores: Precision: 6.619760932062339e-05; Recall: 7.565441065214101e-05; F1: 7.02505241769881e-05
+2024-02-16 18:27:07 root INFO: Validation epoch ended
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-16 17:19:53/valid/ref_356_0.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-16 17:19:53/valid/hyp_356_0.xml]
+2024-02-16 18:50:55 root INFO: Iteration: 534; Rank: 0
+2024-02-16 19:03:38 root INFO: Validation scores: Precision: 6.304534221011752e-05; Recall: 7.565441065214101e-05; F1: 6.844922868527045e-05
+2024-02-16 19:03:38 root INFO: Validation epoch ended
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-16 17:19:53/valid/ref_534_0.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-16 17:19:53/valid/hyp_534_0.xml]
+2024-02-16 19:28:19 root INFO: Iteration: 712; Rank: 0
+2024-02-16 19:42:47 root INFO: Validation scores: Precision: 6.146920865486458e-05; Recall: 7.565441065214101e-05; F1: 6.754858093941163e-05
+2024-02-16 19:42:47 root INFO: Validation epoch ended
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-16 17:19:53/valid/ref_712_0.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-16 17:19:53/valid/hyp_712_0.xml]
+Epoch 3/99 ━━━━━━━━━━━━━━━━━━━━ 1772/1772 0:10:15 • 0:00:00 3.27it/s v_num: 9:53

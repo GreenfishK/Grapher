@@ -7,6 +7,8 @@ import os
 import json
 from datetime import datetime
 import logging
+import fcntl
+import errno
 
 failed_node = 'failed node'
 failed_edge = 'failed edge'
@@ -57,7 +59,10 @@ def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edg
 
 def compute_scores(hyp, ref, iteration, eval_dir, split, rank):
     """
-    Compute evaluation scores (prec, rec, F1) for generated triples against reference triples.
+    Convert the hypotheses and references into RDF/xml format files and saves them as xml files.
+    Compute evaluation scores based on these XML files and save them as JSON files.
+    Load the JSON files and extract evaluation scores from them.
+
     Args:
         * hyp: List of generated triples (hypotheses).
         * ref: List of reference triples.
@@ -65,10 +70,6 @@ def compute_scores(hyp, ref, iteration, eval_dir, split, rank):
         * eval_dir: Directory path where evaluation files will be stored.
         * split: Name of the data split (e.g., 'valid' or 'test').
         * rank: Rank of the process (used for naming files).
-
-    Convert the hypotheses and references into RDF/xml format files and saves them as xml files.
-    Compute evaluation scores based on these XML files and save them as JSON files.
-    Load the JSON files and extract evaluation scores from them.
 
     Returns:
         The evaluation scores as dict.
@@ -243,7 +244,7 @@ def _decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
     return s
 
 
-def create_exec_dir(eval_dir: str, cache_dir, from_scratch: bool) -> str:
+def setup_exec_env(eval_dir: str, cache_dir: str, from_scratch: bool) -> str:
     """
     Create a new execution directory which is named after the current timestamp and create 
     subdiretories for the checkpoints as well as validation and test outputs. 
@@ -267,21 +268,33 @@ def create_exec_dir(eval_dir: str, cache_dir, from_scratch: bool) -> str:
 
     # from_scratch = -2 .. itentiallaly new dir
     # not valid_dirs = no training yet
-    forked = _is_forked(cache_dir)
-    if not forked and (from_scratch or not valid_dirs):
-        training_start_tmstmp = str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
-        exec_dir = os.path.join(eval_dir, training_start_tmstmp)
-        os.makedirs(exec_dir, exist_ok=True)
-        os.makedirs(os.path.join(exec_dir, 'checkpoints'), exist_ok=True)
-        os.makedirs(os.path.join(exec_dir, 'valid'), exist_ok=True)
-        os.makedirs(os.path.join(exec_dir, 'test'), exist_ok=True)
-
-        logging.info(f"Created new directory: {exec_dir} with three sub directories")
-        return exec_dir
-    
-    if valid_dirs:
+        
+    def last_exec_dir(eval_dir: str, valid_dirs: list):
         last_exec_dir_b = max(valid_dirs, key=lambda x: x[0])[1]
         return os.path.join(eval_dir, last_exec_dir_b.decode())
+
+    if from_scratch or not valid_dirs:
+        lock = _acquire_lock(cache_dir)
+        if lock:
+            training_start_tmstmp = str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+            new_exec_dir = os.path.join(eval_dir, training_start_tmstmp)
+            os.makedirs(new_exec_dir, exist_ok=True)
+            os.makedirs(os.path.join(new_exec_dir, 'checkpoints'), exist_ok=True)
+            os.makedirs(os.path.join(new_exec_dir, 'valid'), exist_ok=True)
+            os.makedirs(os.path.join(new_exec_dir, 'test'), exist_ok=True)
+
+            logging.info(f"Created new directory: {new_exec_dir} with three sub directories")
+            return new_exec_dir
+        else:
+            last_exec_dir = last_exec_dir(eval_dir, valid_dirs)
+            logging.info(f"Another process already setup the execution environment in {last_exec_dir}. \
+                          That directory will be returned")
+            return last_exec_dir
+    
+    if valid_dirs:
+        last_exec_dir = last_exec_dir(eval_dir, valid_dirs)
+        logging.info(f"The training resumes from the last execution directory: {last_exec_dir}")
+        return last_exec_dir
 
 
 
@@ -289,29 +302,33 @@ def model_file_name(exec_dir: str, epoch: int) -> str:
     """
     Returns the file name of the model for a specific `epoch` that resides within `exec_dir/checkpoints`.
     """
+
     exec_dir_encoded = os.fsencode(exec_dir)
     for model in os.listdir(os.path.join(exec_dir_encoded, "checkpoints")):
         if model.startswith(f"model-epoch={str(epoch).zfill(2)}"):
             return model
 
 
-def _is_forked(cache_dir):
+def _acquire_lock(lock_file_dir: str):
+    lockfile = lock_file_dir + "/lockfile.lock"
+    file_descriptor = os.open(lockfile, os.O_CREAT | os.O_WRONLY)
+    try:
+        fcntl.flock(file_descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return file_descriptor
+    except IOError as e:
+        if e.errno == errno.EAGAIN:
+            print("Another process has already acquired the lock.")
+            os.close(file_descriptor)
+            return None
+        else:
+            raise
+
+
+def shutdown_exec_env(file_descriptor, lock_file_dir):
     """
-    Returns whether the current process has been forked.
+    Release the lock and remove the lock file.
     """
 
-    # Clean up file from previous runs
-
-    # Log process ID
-    current_process = os.getpid()
-    with open(f"{cache_dir}/processes", "a") as processes:
-        processes.write(str(current_process) + "\n")
-
-    forked = False
-    processes = open(f"{cache_dir}/processes", "r")
-    for line in processes.readlines():
-        logging.info(f"Process ID: {line}; Parent ID: {os.getppid()}")
-        if int(line) == os.getppid():
-            forked = True
-            return forked
-    
+    fcntl.flock(file_descriptor, fcntl.LOCK_UN)
+    os.close(file_descriptor)
+    os.remove(lock_file_dir + "/lockfile.lock")

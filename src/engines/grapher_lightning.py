@@ -98,6 +98,9 @@ class LitGrapher(pl.LightningModule):
         * Generate (unnormalized) predictions for nodes and edges.
         * Compute and log loss.
 
+        Args from Trainer class that impact this step:
+        * log_every_n_steps: Logs every n training steps, i.e. every n batches.
+
         Returns: 
             * loss
         """
@@ -176,6 +179,7 @@ class LitGrapher(pl.LightningModule):
         * Prepares a formatted representation of target and predicted triples from the batch for TensorBoard.
         * Logs the string to TensorBoard.
         """
+        logging.info("Entering evaluation step")
 
         # target_nodes: batch_size X seq_len_node ?
         text_input_ids, text_input_attn_mask, target_nodes, target_nodes_mask, target_edges = batch
@@ -221,7 +225,7 @@ class LitGrapher(pl.LightningModule):
     def eval_epoch_end(self, split):
         """
         Compute precision, recall, and F1 for the `split` set, 
-        accumulate them accross devices, and log these scores.
+        accumulate them accross devices, and log these scores to TensorBoard.
         """
 
         dec_target_all = []
@@ -235,7 +239,7 @@ class LitGrapher(pl.LightningModule):
         dec_pred_all = [tr[:10] for tr in dec_pred_all]
         dec_target_all = [tr[:10] for tr in dec_target_all]
 
-        # Compute Precission, Recall, and F1, log them as JSON files and to LightningModule
+        # Compute Precission, Recall, and F1, log them as JSON files
         logging.info(f"Iteration: {self.global_step}; Rank: {self.global_rank}")
         scores = compute_scores(dec_pred_all, dec_target_all, self.global_step,
                                 self.exec_dir, split, self.global_rank)

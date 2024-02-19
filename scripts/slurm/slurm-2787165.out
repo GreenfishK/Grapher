@@ -1,0 +1,214 @@
+[nltk_data] Downloading package punkt to /gpfs/data/fs72332/fkovacev/d
+[nltk_data]     ata/core/grapher/output/../lib/punkt...
+[nltk_data] Downloading package punkt to /gpfs/data/fs72332/fkovacev/d
+[nltk_data]     ata/core/grapher/output/../lib/punkt...
+[nltk_data]   Package punkt is already up-to-date!
+[nltk_data]   Package punkt is already up-to-date!
+Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+2024-02-16 17:20:05 root INFO: Load training data into GraphDataset.
+2024-02-16 17:20:05 root INFO: Load training data into GraphDataset.
+[nltk_data] Downloading package punkt to /gpfs/data/fs72332/fkovacev/d
+[nltk_data]     ata/core/grapher/output/../lib/punkt...
+[nltk_data] Downloading package punkt to /gpfs/data/fs72332/fkovacev/d
+[nltk_data]     ata/core/grapher/output/../lib/punkt...
+[nltk_data]   Package punkt is already up-to-date!
+[nltk_data]   Package punkt is already up-to-date!
+2024-02-16 17:20:06 root INFO: Load validation data (dev) into GraphDataset.
+2024-02-16 17:20:06 root INFO: Load validation data (dev) into GraphDataset.
+2024-02-16 17:20:06 root INFO: Process ID: 3259069
+; Parent ID: 1126281
+2024-02-16 17:20:06 root INFO: Process ID: 3259223
+; Parent ID: 1126281
+2024-02-16 17:20:06 root INFO: Process ID: 3259069
+; Parent ID: 1126281
+2024-02-16 17:20:06 root INFO: Process ID: 3259223
+; Parent ID: 1126281
+2024-02-16 17:20:06 root INFO: Process ID: 1126287
+; Parent ID: 1126281
+2024-02-16 17:20:06 root INFO: Process ID: 1126287
+; Parent ID: 1126281
+2024-02-16 17:20:06 root INFO: Process ID: 1126288
+; Parent ID: 1126281
+2024-02-16 17:20:06 root INFO: Process ID: 1126288
+; Parent ID: 1126281
+2024-02-16 17:20:06 root INFO: Created new directory: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06 with three sub directories
+2024-02-16 17:20:06 root INFO: Created new directory: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06 with three sub directories
+2024-02-16 17:20:06 torch.distributed.nn.jit.instantiator INFO: Created a temporary directory at /tmp/tmprx7sdtbb
+2024-02-16 17:20:06 torch.distributed.nn.jit.instantiator INFO: Created a temporary directory at /tmp/tmprgll3ava
+2024-02-16 17:20:06 torch.distributed.nn.jit.instantiator INFO: Writing /tmp/tmprx7sdtbb/_remote_module_non_scriptable.py
+2024-02-16 17:20:06 torch.distributed.nn.jit.instantiator INFO: Writing /tmp/tmprgll3ava/_remote_module_non_scriptable.py
+Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+2024-02-16 17:20:06 root INFO: Load training data into GraphDataset.
+2024-02-16 17:20:06 root INFO: Load training data into GraphDataset.
+2024-02-16 17:20:07 root INFO: Load validation data (dev) into GraphDataset.
+2024-02-16 17:20:07 root INFO: Load validation data (dev) into GraphDataset.
+2024-02-16 17:20:07 root INFO: Process ID: 3259069
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Process ID: 3259223
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Process ID: 3259069
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Process ID: 3259223
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Process ID: 1126287
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Process ID: 1126288
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Process ID: 1126287
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Process ID: 1126288
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Process ID: 1322896
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Process ID: 1322895
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Process ID: 1322896
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Process ID: 1322895
+; Parent ID: 1322889
+2024-02-16 17:20:07 root INFO: Created new directory: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07 with three sub directories
+2024-02-16 17:20:07 root INFO: Created new directory: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07 with three sub directories
+2024-02-16 17:20:07 torch.distributed.nn.jit.instantiator INFO: Created a temporary directory at /tmp/tmpbszlow84
+2024-02-16 17:20:07 torch.distributed.nn.jit.instantiator INFO: Created a temporary directory at /tmp/tmpzbf9u8t_
+2024-02-16 17:20:07 torch.distributed.nn.jit.instantiator INFO: Writing /tmp/tmpbszlow84/_remote_module_non_scriptable.py
+2024-02-16 17:20:07 torch.distributed.nn.jit.instantiator INFO: Writing /tmp/tmpzbf9u8t_/_remote_module_non_scriptable.py
+2024-02-16 17:20:12 root INFO: NVIDIA A40
+2024-02-16 17:20:12 root INFO: NVIDIA A40
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+`Trainer(limit_train_batches=1.0)` was configured so 100% of the batches per epoch will be used..
+`Trainer(limit_val_batches=1.0)` was configured so 100% of the batches will be used..
+2024-02-16 17:20:12 root INFO: Starting new training in location: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06
+`Trainer(limit_test_batches=1.0)` was configured so 100% of the batches will be used..
+2024-02-16 17:20:12 root INFO: Starting new training in location: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06
+Initializing distributed: GLOBAL_RANK: 1, MEMBER: 2/4
+Initializing distributed: GLOBAL_RANK: 0, MEMBER: 1/4
+2024-02-16 17:20:12 torch.distributed.distributed_c10d INFO: Added key: store_based_barrier_key:1 to store for rank: 1
+2024-02-16 17:20:13 root INFO: NVIDIA A40
+2024-02-16 17:20:13 root INFO: NVIDIA A40
+2024-02-16 17:20:13 root INFO: Starting new training in location: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07
+2024-02-16 17:20:13 root INFO: Starting new training in location: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07
+Initializing distributed: GLOBAL_RANK: 3, MEMBER: 4/4
+2024-02-16 17:20:14 torch.distributed.distributed_c10d INFO: Added key: store_based_barrier_key:1 to store for rank: 3
+Initializing distributed: GLOBAL_RANK: 2, MEMBER: 3/4
+2024-02-16 17:20:14 torch.distributed.distributed_c10d INFO: Added key: store_based_barrier_key:1 to store for rank: 2
+2024-02-16 17:20:14 torch.distributed.distributed_c10d INFO: Added key: store_based_barrier_key:1 to store for rank: 0
+2024-02-16 17:20:14 torch.distributed.distributed_c10d INFO: Rank 0: Completed store-based barrier for key:store_based_barrier_key:1 with 4 nodes.
+----------------------------------------------------------------------------------------------------
+distributed_backend=nccl
+All distributed processes registered. Starting with 4 processes
+----------------------------------------------------------------------------------------------------
+
+2024-02-16 17:20:14 torch.distributed.distributed_c10d INFO: Rank 3: Completed store-based barrier for key:store_based_barrier_key:1 with 4 nodes.
+2024-02-16 17:20:14 torch.distributed.distributed_c10d INFO: Rank 2: Completed store-based barrier for key:store_based_barrier_key:1 with 4 nodes.
+2024-02-16 17:20:14 torch.distributed.distributed_c10d INFO: Rank 1: Completed store-based barrier for key:store_based_barrier_key:1 with 4 nodes.
+2024-02-16 17:20:17 root INFO: Load training data into GraphDataset.
+2024-02-16 17:20:17 root INFO: Load training data into GraphDataset.
+2024-02-16 17:20:17 root INFO: Load training data into GraphDataset.
+2024-02-16 17:20:17 root INFO: Load training data into GraphDataset.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1]
+LOCAL_RANK: 1 - CUDA_VISIBLE_DEVICES: [0,1]
+LOCAL_RANK: 1 - CUDA_VISIBLE_DEVICES: [0,1]
+┏━━━┳━━━━━━━┳━━━━━━━━━┳━━━━━━━━┓
+┃   ┃ Name  ┃ Type    ┃ Params ┃
+┡━━━╇━━━━━━━╇━━━━━━━━━╇━━━━━━━━┩
+│ 0 │ model │ Grapher │  809 M │
+└───┴───────┴─────────┴────────┘
+Trainable params: 809 M                                                         
+Non-trainable params: 0                                                         
+Total params: 809 M                                                             
+Total estimated model params size (MB): 3.2 K                                   
+SLURM auto-requeueing enabled. Setting signal handlers.
+SLURM auto-requeueing enabled. Setting signal handlers.
+SLURM auto-requeueing enabled. Setting signal handlers.
+SLURM auto-requeueing enabled. Setting signal handlers.
+2024-02-16 17:20:34 torch.nn.parallel.distributed INFO: Reducer buckets have been rebuilt in this iteration.
+2024-02-16 17:20:34 torch.nn.parallel.distributed INFO: Reducer buckets have been rebuilt in this iteration.
+2024-02-16 17:20:34 torch.nn.parallel.distributed INFO: Reducer buckets have been rebuilt in this iteration.
+2024-02-16 17:20:34 torch.nn.parallel.distributed INFO: Reducer buckets have been rebuilt in this iteration.
+2024-02-16 17:33:55 root INFO: Iteration: 45; Rank: 0
+2024-02-16 17:33:57 root INFO: Iteration: 45; Rank: 3
+2024-02-16 17:33:58 root INFO: Iteration: 45; Rank: 2
+2024-02-16 17:33:59 root INFO: Iteration: 45; Rank: 1
+2024-02-16 17:34:20 root INFO: Validation scores: Precision: 7.571168988491823e-05; Recall: 0.00010094891984655763; F1: 8.65276455827637e-05
+2024-02-16 17:34:20 root INFO: Validation epoch ended
+2024-02-16 17:34:22 root INFO: Validation scores: Precision: 7.559721802237678e-05; Recall: 0.00010079629069650237; F1: 8.639682059700204e-05
+2024-02-16 17:34:22 root INFO: Validation epoch ended
+2024-02-16 17:34:24 root INFO: Validation scores: Precision: 7.562008469449486e-05; Recall: 0.00010082677959265981; F1: 8.642295393656557e-05
+2024-02-16 17:34:24 root INFO: Validation epoch ended
+2024-02-16 17:34:24 root INFO: Validation scores: Precision: 0.0; Recall: 0.0; F1: 0
+2024-02-16 17:34:24 root INFO: Validation epoch ended
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/ref_45_1.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/hyp_45_1.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/ref_45_2.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/hyp_45_2.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/ref_45_3.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/hyp_45_3.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/ref_45_0.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/hyp_45_0.xml]
+2024-02-16 17:48:08 root INFO: Iteration: 90; Rank: 2
+2024-02-16 17:48:08 root INFO: Iteration: 90; Rank: 0
+2024-02-16 17:48:09 root INFO: Iteration: 90; Rank: 3
+2024-02-16 17:48:10 root INFO: Iteration: 90; Rank: 1
+2024-02-16 17:48:59 root INFO: Validation scores: Precision: 7.571168988491823e-05; Recall: 0.00010094891984655763; F1: 8.65276455827637e-05
+2024-02-16 17:48:59 root INFO: Validation epoch ended
+2024-02-16 17:49:00 root INFO: Validation scores: Precision: 7.562008469449486e-05; Recall: 0.00010082677959265981; F1: 8.642295393656557e-05
+2024-02-16 17:49:00 root INFO: Validation epoch ended
+2024-02-16 17:49:01 root INFO: Validation scores: Precision: 7.559721802237678e-05; Recall: 0.00010079629069650237; F1: 8.639682059700204e-05
+2024-02-16 17:49:01 root INFO: Validation epoch ended
+2024-02-16 17:49:02 root INFO: Validation scores: Precision: 0.0; Recall: 0.0; F1: 0
+2024-02-16 17:49:02 root INFO: Validation epoch ended
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/ref_90_1.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/hyp_90_1.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/ref_90_2.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/hyp_90_2.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/ref_90_0.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/hyp_90_0.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/ref_90_3.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/hyp_90_3.xml]
+2024-02-16 18:02:42 root INFO: Iteration: 135; Rank: 0
+2024-02-16 18:02:43 root INFO: Iteration: 135; Rank: 2
+2024-02-16 18:02:44 root INFO: Iteration: 135; Rank: 3
+2024-02-16 18:02:45 root INFO: Iteration: 135; Rank: 1
+2024-02-16 18:03:59 root INFO: Validation scores: Precision: 7.571168988491823e-05; Recall: 0.00010094891984655763; F1: 8.65276455827637e-05
+2024-02-16 18:03:59 root INFO: Validation epoch ended
+2024-02-16 18:04:01 root INFO: Validation scores: Precision: 7.562008469449486e-05; Recall: 0.00010082677959265981; F1: 8.642295393656557e-05
+2024-02-16 18:04:01 root INFO: Validation epoch ended
+2024-02-16 18:04:03 root INFO: Validation scores: Precision: 7.559721802237678e-05; Recall: 0.00010079629069650237; F1: 8.639682059700204e-05
+2024-02-16 18:04:03 root INFO: Validation epoch ended
+2024-02-16 18:04:03 root INFO: Validation scores: Precision: 0.0; Recall: 0.0; F1: 0
+2024-02-16 18:04:03 root INFO: Validation epoch ended
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/ref_135_1.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/hyp_135_1.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/ref_135_3.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/hyp_135_3.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/ref_135_0.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/hyp_135_0.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/ref_135_2.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/hyp_135_2.xml]
+2024-02-16 18:17:42 root INFO: Iteration: 180; Rank: 0
+2024-02-16 18:17:46 root INFO: Iteration: 180; Rank: 1
+2024-02-16 18:17:51 root INFO: Iteration: 180; Rank: 2
+2024-02-16 18:17:54 root INFO: Iteration: 180; Rank: 3
+2024-02-16 18:50:50 root INFO: Validation scores: Precision: 0.0; Recall: 0.0; F1: 0
+2024-02-16 18:50:50 root INFO: Validation epoch ended
+2024-02-16 18:50:56 root INFO: Validation scores: Precision: 8.202099737532808e-05; Recall: 0.00010094891984655763; F1: 9.013296414871219e-05
+2024-02-16 18:50:56 root INFO: Validation epoch ended
+2024-02-16 18:51:00 root INFO: Validation scores: Precision: 8.189698619090817e-05; Recall: 0.00010079629069650237; F1: 8.999668812187712e-05
+2024-02-16 18:51:00 root INFO: Validation epoch ended
+2024-02-16 18:51:03 root INFO: Validation scores: Precision: 8.19217584190361e-05; Recall: 0.00010082677959265981; F1: 9.002391035058913e-05
+2024-02-16 18:51:03 root INFO: Validation epoch ended
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/ref_180_0.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/hyp_180_0.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/ref_180_2.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/hyp_180_2.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/ref_180_1.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:06/valid/hyp_180_1.xml]
+creating reference xml  file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/ref_180_3.xml]
+creating hypothesis xml file : [/gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=gen/2024-02-16 17:20:07/valid/hyp_180_3.xml]
+Epoch 3/99 ━━━━━━━━━━━━━━━━━━━━━━ 443/443 0:09:38 • 0:00:00 0.67it/s v_num: 0:06
