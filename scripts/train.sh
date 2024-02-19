@@ -37,6 +37,7 @@ python_args=(
     "--focal_loss_gamma" "3" 
     "--dropout_rate" "0.5" 
     "--num_layers" "2"
+    "--eval_dump_only" "0"
 )
 
 # Check if $HARDWARE_SETTING starts with "s" for SLURM
