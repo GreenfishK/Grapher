@@ -30,17 +30,28 @@ python_args=(
 
 # Check if $HARDWARE_SETTING starts with "s" for SLURM
 if [[ $HARDWARE_SETTING == s* ]]; then
-    # Run the test with sbatch
-    sbatch --job-name=train_class_grapher2 \
+    if [[ ${NUM_NODES} -gt 1 ]]; then
+        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING} \
         --partition=${PARTITION}\
         --qos=${QOS} \
         --nodes=${NUM_NODES} \
-        --ntasks-per-node=${NUM_GPUS} \
-        --gres=gpu:${NUM_GPUS} \
+        --gres=gpu:${NUM_GPUS_PER_NODE} \
+        --ntasks-per-node=${NUM_GPUS_PER_NODE}\
         --time=1-0 \
         --mail-type=BEGIN \
         --mail-user=filip.kovacevic@tuwien.ac.at \
-    main.slm "${python_args[@]}"
+        main.slm "${python_args[@]}"
+    else
+        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING} \
+        --partition=${PARTITION}\
+        --qos=${QOS} \
+        --gres=gpu:${NUM_GPUS_PER_NODE} \
+        --ntasks-per-node=${NUM_GPUS_PER_NODE}\
+        --time=1-0 \
+        --mail-type=BEGIN \
+        --mail-user=filip.kovacevic@tuwien.ac.at \
+        main.slm "${python_args[@]}"
+    fi
 else
     # Run the test without sbatch
     python3 main.py "${python_args[@]}"
