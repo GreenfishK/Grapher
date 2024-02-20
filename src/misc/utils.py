@@ -274,6 +274,9 @@ def setup_exec_env(eval_dir: str, cache_dir: str, from_scratch: bool) -> str:
         The path the the new or existing exectution directory.
     """
 
+    if not os.path.exists(eval_dir):
+        os.makedirs(eval_dir, exist_ok=True)
+
     # Filter directories by timestamp format
     eval_dir_encoded = os.fsencode(eval_dir)
     valid_dirs = []
