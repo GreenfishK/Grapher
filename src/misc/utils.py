@@ -292,22 +292,23 @@ def setup_exec_env(eval_dir: str, cache_dir: str, from_scratch: bool) -> str:
         return os.path.join(eval_dir, last_exec_dir_b.decode())
 
     if from_scratch or not valid_dirs:
-        lock = _acquire_lock(cache_dir)
-        if lock:
-            training_start_tmstmp = str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
-            new_exec_dir = os.path.join(eval_dir, training_start_tmstmp)
-            os.makedirs(new_exec_dir, exist_ok=True)
-            os.makedirs(os.path.join(new_exec_dir, 'checkpoints'), exist_ok=True)
-            os.makedirs(os.path.join(new_exec_dir, 'valid'), exist_ok=True)
-            os.makedirs(os.path.join(new_exec_dir, 'test'), exist_ok=True)
+        #lock = _acquire_lock(cache_dir)
+        #if lock:
+        #training_start_tmstmp = str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
+        training_start_tmstmp = os.environ['CURRENT_DATETIME']
+        new_exec_dir = os.path.join(eval_dir, training_start_tmstmp)
+        os.makedirs(new_exec_dir, exist_ok=True)
+        os.makedirs(os.path.join(new_exec_dir, 'checkpoints'), exist_ok=True)
+        os.makedirs(os.path.join(new_exec_dir, 'valid'), exist_ok=True)
+        os.makedirs(os.path.join(new_exec_dir, 'test'), exist_ok=True)
 
-            logging.info(f"Created new directory: {new_exec_dir} with three sub directories")
-            return new_exec_dir
-        else:
-            last_exec_dir = last_exec_dir(eval_dir, valid_dirs)
-            logging.info(f"Another process already setup the execution environment in {last_exec_dir}. \
-                          That directory will be returned")
-            return last_exec_dir
+        logging.info(f"Created new directory: {new_exec_dir} with three sub directories")
+        return new_exec_dir
+        #else:
+            #last_exec_dir = last_exec_dir(eval_dir, valid_dirs)
+            #logging.info(f"Another process already setup the execution environment in {last_exec_dir}. \
+            #              That directory will be returned")
+            #return last_exec_dir
     
     if valid_dirs:
         last_exec_dir = last_exec_dir(eval_dir, valid_dirs)

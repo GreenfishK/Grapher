@@ -54,6 +54,7 @@ if [[ $HARDWARE_SETTING == s* ]]; then
         --gres=gpu:${NUM_GPUS_PER_NODE} \
         --ntasks-per-node=${NUM_GPUS_PER_NODE} \
         --time=1-0 \
+        --output=${STORAGE_DRIVE}/data/core/grapher/output/slurm-%A_%a.out \
         --mail-type=BEGIN \
         --mail-user=filip.kovacevic@tuwien.ac.at \
         main.slm "${python_args[@]}"
@@ -64,6 +65,7 @@ if [[ $HARDWARE_SETTING == s* ]]; then
         --gres=gpu:${NUM_GPUS_PER_NODE} \
         --ntasks-per-node=${NUM_GPUS_PER_NODE} \
         --time=1-0 \
+        --output=${STORAGE_DRIVE}/data/core/grapher/output/slurm-%A_%a.out \
         --mail-type=BEGIN \
         --mail-user=filip.kovacevic@tuwien.ac.at \
         main.slm "${python_args[@]}"
