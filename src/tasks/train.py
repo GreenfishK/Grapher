@@ -11,7 +11,7 @@ import torch
 import logging
 
 
-def train(args, model_variant, device):
+def train(args, device):
 
     # -------------------- Data module ---------------------
     dm = GraphDataModule(cache_dir=args.cache_dir,
@@ -36,10 +36,7 @@ def train(args, model_variant, device):
 
     # -------------------- Engine incl. Model ---------------------
     # Create execution environment for training, validation and test output files
-
-    eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
-    #try:
-    exec_dir = setup_exec_env(eval_dir, args.cache_dir, from_scratch = True if args.checkpoint_model_id < -1 else False)
+    exec_dir = setup_exec_env(os.environ['EVAL_DIR'], from_scratch = True if args.checkpoint_model_id < -1 else False)
 
     grapher = LitGrapher(exec_dir=exec_dir,
                         cache_dir=args.cache_dir,
@@ -112,10 +109,10 @@ def train(args, model_variant, device):
     )
 
     # Logger for TensorBoard
-    TB = pl_loggers.TensorBoardLogger(save_dir=eval_dir,
-                                    name='',
-                                    version=exec_dir.split('/')[-1], 
-                                    default_hp_metric=False)
+    TB = pl_loggers.TensorBoardLogger(save_dir=os.environ['EVAL_DIR'],
+                                      name='',
+                                      version=exec_dir.split('/')[-1], 
+                                      default_hp_metric=False)
     
     # Validation checks are done every check_val_every_n_epoch epoch.
     trainer = pl.Trainer(default_root_dir=args.default_root_dir,
@@ -155,5 +152,3 @@ def train(args, model_variant, device):
     trainer.fit(model=grapher, 
                 datamodule=dm,
                 ckpt_path=checkpoint_model_path)    
-#finally:
-#    shutdown_exec_env

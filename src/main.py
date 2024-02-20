@@ -63,7 +63,7 @@ if args.run in ['train', 'test']:
     nltk.data.path.append(punkt_dir)
 
 if args.run == "train":
-    train.train(args, model_variant, device)
+    train.train(args, device)
 elif args.run == "test":
     test.test(args, model_variant, device)
 elif args.run == "inference":

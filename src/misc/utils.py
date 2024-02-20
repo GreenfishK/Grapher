@@ -260,7 +260,7 @@ def _decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
     return s
 
 
-def setup_exec_env(eval_dir: str, cache_dir: str, from_scratch: bool) -> str:
+def setup_exec_env(eval_dir: str, from_scratch: bool) -> str:
     """
     Create a new execution directory which is named after the current timestamp and create 
     subdiretories for the checkpoints as well as validation and test outputs. 
@@ -289,15 +289,11 @@ def setup_exec_env(eval_dir: str, cache_dir: str, from_scratch: bool) -> str:
 
     # from_scratch = -2 .. itentiallaly new dir
     # not valid_dirs = no training yet
-        
     def last_exec_dir(eval_dir: str, valid_dirs: list):
         last_exec_dir_b = max(valid_dirs, key=lambda x: x[0])[1]
         return os.path.join(eval_dir, last_exec_dir_b.decode())
 
     if from_scratch or not valid_dirs:
-        #lock = _acquire_lock(cache_dir)
-        #if lock:
-        #training_start_tmstmp = str(datetime.today().strftime('%Y-%m-%d %H:%M:%S'))
         training_start_tmstmp = os.environ['CURRENT_DATETIME']
         new_exec_dir = os.path.join(eval_dir, training_start_tmstmp)
         os.makedirs(new_exec_dir, exist_ok=True)
@@ -307,11 +303,6 @@ def setup_exec_env(eval_dir: str, cache_dir: str, from_scratch: bool) -> str:
 
         logging.info(f"Created new directory: {new_exec_dir} with three sub directories")
         return new_exec_dir
-        #else:
-            #last_exec_dir = last_exec_dir(eval_dir, valid_dirs)
-            #logging.info(f"Another process already setup the execution environment in {last_exec_dir}. \
-            #              That directory will be returned")
-            #return last_exec_dir
     
     if valid_dirs:
         last_exec_dir = last_exec_dir(eval_dir, valid_dirs)
@@ -329,28 +320,3 @@ def model_file_name(exec_dir: str, epoch: int) -> str:
     for model in os.listdir(os.path.join(exec_dir_encoded, "checkpoints")):
         if model.startswith(f"model-epoch={str(epoch).zfill(2)}"):
             return model
-
-
-def _acquire_lock(lock_file_dir: str):
-    lockfile = lock_file_dir + "/lockfile.lock"
-    file_descriptor = os.open(lockfile, os.O_CREAT | os.O_WRONLY)
-    try:
-        fcntl.flock(file_descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        return file_descriptor
-    except IOError as e:
-        if e.errno == errno.EAGAIN:
-            print("Another process has already acquired the lock.")
-            os.close(file_descriptor)
-            return None
-        else:
-            raise
-
-
-def shutdown_exec_env(file_descriptor, lock_file_dir):
-    """
-    Release the lock and remove the lock file.
-    """
-
-    fcntl.flock(file_descriptor, fcntl.LOCK_UN)
-    os.close(file_descriptor)
-    os.remove(lock_file_dir + "/lockfile.lock")

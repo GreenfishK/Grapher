@@ -182,8 +182,6 @@ class LitGrapher(pl.LightningModule):
         * Logs the string to TensorBoard.
         """
 
-        logging.info("Entering evaluation step")
-
         # target_nodes: batch_size X seq_len_node ?
         text_input_ids, text_input_attn_mask, target_nodes, target_nodes_mask, target_edges = batch
 

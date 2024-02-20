@@ -10,11 +10,11 @@ python_args=(
     "--run" "train"
     "--edges_as_classes" "${MODEL_VARIANT}"
     "--dataset" "webnlg"
-    "--data_path" "${STORAGE_DRIVE}/data/core/webnlg-dataset/release_v3.0/en"
+    "--data_path" "${DATA_DIR}"
     "--num_data_workers" "${NUM_DATAWORKERS}"
     "--checkpoint_model_id" "-2"
     "--batch_size" "${BATCH_SIZE}"
-    "--default_root_dir" "${STORAGE_DRIVE}/data/core/grapher/output"
+    "--default_root_dir" "${ROOT_DIR}"
     "--accelerator" "gpu"
     "--max_epochs" "100"
     "--num_nodes" "${NUM_NODES}"
@@ -28,7 +28,7 @@ python_args=(
     "--log_every_n_steps" "100"
     "--check_val_every_n_epoch" "1"
     "--pretrained_model" "t5-large"
-    "--cache_dir" "${STORAGE_DRIVE}/data/core/cache/grapher"
+    "--cache_dir" "${CACHE_DIR}"
     "--max_nodes" "8" 
     "--max_edges" "7" 
     "--default_seq_len_node" "20" 
@@ -54,7 +54,7 @@ if [[ $HARDWARE_SETTING == s* ]]; then
         --gres=gpu:${NUM_GPUS_PER_NODE} \
         --ntasks-per-node=${NUM_GPUS_PER_NODE} \
         --time=1-0 \
-        --output=${STORAGE_DRIVE}/data/core/grapher/output/slurm-%A_%a.out \
+        --output=${EXEC_DIR}/slurm-%A_%a.out \
         --mail-type=BEGIN \
         --mail-user=filip.kovacevic@tuwien.ac.at \
         main.slm "${python_args[@]}"
@@ -65,7 +65,7 @@ if [[ $HARDWARE_SETTING == s* ]]; then
         --gres=gpu:${NUM_GPUS_PER_NODE} \
         --ntasks-per-node=${NUM_GPUS_PER_NODE} \
         --time=1-0 \
-        --output=${STORAGE_DRIVE}/data/core/grapher/output/slurm-%A_%a.out \
+        --output=${EXEC_DIR}/slurm-%A_%a.out \
         --mail-type=BEGIN \
         --mail-user=filip.kovacevic@tuwien.ac.at \
         main.slm "${python_args[@]}"

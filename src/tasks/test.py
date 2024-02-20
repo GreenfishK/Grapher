@@ -1,27 +1,37 @@
 from data.webnlg.datamodule import GraphDataModule
 from engines.grapher_lightning import LitGrapher
-
+from misc.utils import setup_exec_env, model_file_name
 from pytorch_lightning import loggers as pl_loggers
 import pytorch_lightning as pl
 from transformers import T5Tokenizer
 import os
+import logging
 
 
 # TODO: Build project structure according to this article:
 # https://medium.com/@l.charteros/scalable-project-structure-for-machine-learning-projects-with-pytorch-and-pytorch-lightning-d5f1408d203e
 
-def test(args, model_variant, device):
+def test(args,  device):
+    # Last exec dir
+    exec_dir = setup_exec_env(os.environ['EVAL_DIR'], args.cache_dir)
 
     # Logger for TensorBoard
-    TB = pl_loggers.TensorBoardLogger(save_dir=args.default_root_dir, name='', version=args.dataset + '_model_variant=' + model_variant, default_hp_metric=False)
-
+    TB = pl_loggers.TensorBoardLogger(save_dir=os.environ['EVAL_DIR'],
+                                      name='',
+                                      version=exec_dir.split('/')[-1], 
+                                      default_hp_metric=False)
+    
     # Start from last checkpoint or a specific checkpoint. 
-    eval_dir = os.path.join(args.default_root_dir, args.dataset + '_model_variant=' + model_variant)
-    checkpoint_dir = os.path.join(eval_dir, 'checkpoints')
-    if args.checkpoint_model_id < 0:
+    checkpoint_dir = os.path.join(exec_dir, 'checkpoints')
+    if args.checkpoint_model_id == -1:
+        logging.info(f"Resuming test from location: {exec_dir}")
         checkpoint_model_path = os.path.join(checkpoint_dir, 'last.ckpt')
+    # The test resumes from a specific epoch checkpoint of the last execution of model variant `model_variant`
     else:
-        checkpoint_model_path = os.path.join(checkpoint_dir, f"model-step={args.checkpoint_model_id}.ckpt")
+        logging.info(f"Resuming test from location: {exec_dir} and model at epoch {args.checkpoint_model_id}")
+        checkpoint_model_path = os.path.join(exec_dir,
+                                            'checkpoints',
+                                            model_file_name(exec_dir, args.checkpoint_model_id))
 
     assert os.path.exists(checkpoint_model_path), 'Provided checkpoint does not exists, cannot run the test'
 
@@ -29,6 +39,7 @@ def test(args, model_variant, device):
     if device:
         grapher.to(device)
     grapher.eval()
+    
 
     dm = GraphDataModule(tokenizer_class=T5Tokenizer,
                             tokenizer_name=grapher.transformer_name,
@@ -42,6 +53,7 @@ def test(args, model_variant, device):
                             edges_as_classes=grapher.edges_as_classes)
 
     dm.setup(stage='test')
+
     trainer = pl.Trainer(default_root_dir=args.default_root_dir,
                         accelerator=args.accelerator, 
                         max_epochs=args.max_epochs,
