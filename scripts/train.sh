@@ -1,19 +1,8 @@
 #!/bin/bash
-
-# 1 ... edge classifier head; 0 ... edge generation head
-export MODEL_VARIANT=1
-
-# Available hardware settings that are defined below
-# No SLURM; one node; two GPUs per node; Nvidia A40: 1_2_a40
-# No SLURM; one node;  two GPUs per node; Nvidia A100: 1_2_a100
-# No SLURM; one node; two GPUs per node; Nvidia TI: 1_2_ti
-# SLURM; two node; two GPUs per node; Nvidia A40: s2_2_a40
-# SLURM; one node; two GPUs per node; Nvidia A40: s1_2_a40
-# SLURM; one node; one GPU per node; Nvidia A40: s1_1_a40
-export HARDWARE_SETTING=s1_1_a40
+# Set the STORAGE_DRIVE, MODEL_VARIANT and HARDWARE_SETTING variables in .env
 
 # Load environment variables including HARDWARE_SETTING for the run
-cd ../src 
+cd .. 
 source .env 
 
 # Hyperparameters: Change them if needed. The env variables in the positional arguments are set in .env and set_hparams.sh
@@ -51,6 +40,8 @@ python_args=(
     "--num_layers" "2"
     "--eval_dump_only" "0"
 )
+
+cd src
 
 # Check if $HARDWARE_SETTING starts with "s" for SLURM
 if [[ $HARDWARE_SETTING == s* ]]; then

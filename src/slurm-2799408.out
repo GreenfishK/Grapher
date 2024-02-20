@@ -1,0 +1,63 @@
+[nltk_data] Downloading package punkt to /gpfs/data/fs72332/fkovacev/d
+[nltk_data]     ata/core/grapher/output/../lib/punkt...
+[nltk_data]   Package punkt is already up-to-date!
+Special tokens have been added in the vocabulary, make sure the associated word embeddings are fine-tuned or trained.
+2024-02-20 10:49:20 root INFO: Load training data into GraphDataset.
+2024-02-20 10:49:21 root INFO: Load validation data (dev) into GraphDataset.
+2024-02-20 10:49:21 root INFO: Created new directory: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-20 10:49:21 with three sub directories
+2024-02-20 10:49:21 torch.distributed.nn.jit.instantiator INFO: Created a temporary directory at /tmp/tmpl9ll31he
+2024-02-20 10:49:21 torch.distributed.nn.jit.instantiator INFO: Writing /tmp/tmpl9ll31he/_remote_module_non_scriptable.py
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+`Trainer(limit_train_batches=1.0)` was configured so 100% of the batches per epoch will be used..
+`Trainer(limit_val_batches=1.0)` was configured so 100% of the batches will be used..
+`Trainer(limit_test_batches=1.0)` was configured so 100% of the batches will be used..
+2024-02-20 10:49:28 root INFO: Starting new training in location: /gpfs/data/fs72332/fkovacev/data/core/grapher/output/webnlg_model_variant=class/2024-02-20 10:49:21
+You are using a CUDA device ('NVIDIA A40') that has Tensor Cores. To properly utilize them, you should set `torch.set_float32_matmul_precision('medium' | 'high')` which will trade-off precision for performance. For more details, read https://pytorch.org/docs/stable/generated/torch.set_float32_matmul_precision.html#torch.set_float32_matmul_precision
+2024-02-20 10:49:29 root INFO: Load training data into GraphDataset.
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0]
+┏━━━┳━━━━━━━┳━━━━━━━━━┳━━━━━━━━┓
+┃   ┃ Name  ┃ Type    ┃ Params ┃
+┡━━━╇━━━━━━━╇━━━━━━━━━╇━━━━━━━━┩
+│ 0 │ model │ Grapher │  738 M │
+└───┴───────┴─────────┴────────┘
+Trainable params: 738 M                                                         
+Non-trainable params: 0                                                         
+Total params: 738 M                                                             
+Total estimated model params size (MB): 3.0 K                                   
+SLURM auto-requeueing enabled. Setting signal handlers.
+2024-02-20 11:03:41 root INFO: Entering evaluation step
+2024-02-20 11:03:42 root INFO: Entering evaluation step
+2024-02-20 11:03:43 root INFO: Entering evaluation step
+2024-02-20 11:03:43 root INFO: Entering evaluation step
+2024-02-20 11:03:44 root INFO: Entering evaluation step
+2024-02-20 11:03:45 root INFO: Entering evaluation step
+2024-02-20 11:03:46 root INFO: Entering evaluation step
+2024-02-20 11:03:46 root INFO: Entering evaluation step
+2024-02-20 11:03:47 root INFO: Entering evaluation step
+2024-02-20 11:03:48 root INFO: Entering evaluation step
+2024-02-20 11:03:49 root INFO: Entering evaluation step
+2024-02-20 11:03:50 root INFO: Entering evaluation step
+2024-02-20 11:03:50 root INFO: Entering evaluation step
+2024-02-20 11:03:51 root INFO: Entering evaluation step
+2024-02-20 11:03:52 root INFO: Entering evaluation step
+2024-02-20 11:03:53 root INFO: Entering evaluation step
+2024-02-20 11:03:54 root INFO: Entering evaluation step
+2024-02-20 11:03:55 root INFO: Entering evaluation step
+2024-02-20 11:03:55 root INFO: Entering evaluation step
+2024-02-20 11:03:56 root INFO: Entering evaluation step
+2024-02-20 11:03:57 root INFO: Entering evaluation step
+2024-02-20 11:03:58 root INFO: Entering evaluation step
+2024-02-20 11:03:59 root INFO: Entering evaluation step
+2024-02-20 11:04:00 root INFO: Entering evaluation step
+2024-02-20 11:04:01 root INFO: Entering evaluation step
+2024-02-20 11:04:01 root INFO: Entering evaluation step
+2024-02-20 11:04:02 root INFO: Entering evaluation step
+2024-02-20 11:04:03 root INFO: Entering evaluation step
+2024-02-20 11:04:04 root INFO: Entering evaluation step
+2024-02-20 11:04:05 root INFO: Entering evaluation step
+2024-02-20 11:04:05 root INFO: Entering evaluation step
+2024-02-20 11:04:06 root INFO: Entering evaluation step
+2024-02-20 11:04:07 root INFO: Entering evaluation step
