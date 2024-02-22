@@ -12,7 +12,7 @@ python_args=(
     "--dataset" "webnlg"
     "--data_path" "${DATA_DIR}"
     "--num_data_workers" "${NUM_DATAWORKERS}"
-    "--checkpoint_model_id" "-2"
+    "--checkpoint_model_id" "${CHECKPOINT_MODEL_ID}"
     "--batch_size" "${BATCH_SIZE}"
     "--default_root_dir" "${ROOT_DIR}"
     "--accelerator" "gpu"
@@ -42,12 +42,12 @@ python_args=(
 )
 
 cd src
-
+echo ${EXEC_DIR}
 # Check if $HARDWARE_SETTING starts with "s" for SLURM
 if [[ $HARDWARE_SETTING == s* ]]; then
     # Run the training with sbatch
     if [[ ${NUM_NODES} -gt 1 ]]; then
-        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING} \
+        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING}_%A \
         --partition=${PARTITION} \
         --qos=${QOS} \
         --nodes=${NUM_NODES} \
@@ -59,7 +59,7 @@ if [[ $HARDWARE_SETTING == s* ]]; then
         --mail-user=filip.kovacevic@tuwien.ac.at \
         main.slm "${python_args[@]}"
     else
-        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING} \
+        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING}_%A \
         --partition=${PARTITION} \
         --qos=${QOS} \
         --gres=gpu:${NUM_GPUS_PER_NODE} \

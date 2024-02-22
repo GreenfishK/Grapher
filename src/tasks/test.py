@@ -1,6 +1,6 @@
 from data.webnlg.datamodule import GraphDataModule
 from engines.grapher_lightning import LitGrapher
-from misc.utils import setup_exec_env, model_file_name
+from misc.utils import model_file_name
 from pytorch_lightning import loggers as pl_loggers
 import pytorch_lightning as pl
 from transformers import T5Tokenizer
@@ -12,21 +12,14 @@ import logging
 # https://medium.com/@l.charteros/scalable-project-structure-for-machine-learning-projects-with-pytorch-and-pytorch-lightning-d5f1408d203e
 
 def test(args,  device):
-    # Last exec dir
-    exec_dir = setup_exec_env(os.environ['EVAL_DIR'], args.cache_dir)
-
-    # Logger for TensorBoard
-    TB = pl_loggers.TensorBoardLogger(save_dir=os.environ['EVAL_DIR'],
-                                      name='',
-                                      version=exec_dir.split('/')[-1], 
-                                      default_hp_metric=False)
+    # Load grapher
+    # -------------------------------------------------------------------------------
+    exec_dir = os.environ['EXEC_DIR']
     
-    # Start from last checkpoint or a specific checkpoint. 
     checkpoint_dir = os.path.join(exec_dir, 'checkpoints')
     if args.checkpoint_model_id == -1:
         logging.info(f"Resuming test from location: {exec_dir}")
         checkpoint_model_path = os.path.join(checkpoint_dir, 'last.ckpt')
-    # The test resumes from a specific epoch checkpoint of the last execution of model variant `model_variant`
     else:
         logging.info(f"Resuming test from location: {exec_dir} and model at epoch {args.checkpoint_model_id}")
         checkpoint_model_path = os.path.join(exec_dir,
@@ -41,6 +34,8 @@ def test(args,  device):
     grapher.eval()
     
 
+    # Load data module
+    # -------------------------------------------------------------------------------
     dm = GraphDataModule(tokenizer_class=T5Tokenizer,
                             tokenizer_name=grapher.transformer_name,
                             cache_dir=grapher.cache_dir,
@@ -54,6 +49,15 @@ def test(args,  device):
 
     dm.setup(stage='test')
 
+
+    # Load trainer
+    # -------------------------------------------------------------------------------
+    # Logger for TensorBoard
+    TB = pl_loggers.TensorBoardLogger(save_dir=os.environ['EVAL_DIR'],
+                                      name='',
+                                      version=exec_dir.split('/')[-1], 
+                                      default_hp_metric=False)
+    
     trainer = pl.Trainer(default_root_dir=args.default_root_dir,
                         accelerator=args.accelerator, 
                         max_epochs=args.max_epochs,

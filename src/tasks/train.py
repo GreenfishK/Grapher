@@ -1,6 +1,6 @@
 from data.webnlg.datamodule import GraphDataModule
 from engines.grapher_lightning import LitGrapher
-from misc.utils import setup_exec_env, shutdown_exec_env, model_file_name
+from misc.utils import model_file_name
 
 from pytorch_lightning import loggers as pl_loggers
 import pytorch_lightning as pl
@@ -36,8 +36,8 @@ def train(args, device):
 
     # -------------------- Engine incl. Model ---------------------
     # Create execution environment for training, validation and test output files
-    exec_dir = setup_exec_env(os.environ['EVAL_DIR'], from_scratch = True if args.checkpoint_model_id < -1 else False)
-
+    # exec_dir = setup_exec_env(os.environ['EVAL_DIR'], from_scratch = True if args.checkpoint_model_id < -1 else False)
+    exec_dir = os.environ['EXEC_DIR']
     grapher = LitGrapher(exec_dir=exec_dir,
                         cache_dir=args.cache_dir,
                         transformer_class=T5ForConditionalGeneration,
@@ -132,15 +132,12 @@ def train(args, device):
                         callbacks=[RichProgressBar(10), checkpoint_callback, early_stopping_callback],
                         logger=TB)
     
-    # The training starts from scratch
     if args.checkpoint_model_id < -1:
         logging.info(f"Starting new training in location: {exec_dir}")
         checkpoint_model_path = None
-    # The training resumes from the last checkpoint of the last execution of model variant `model_variant`
     elif args.checkpoint_model_id == -1:
         logging.info(f"Resuming training from location: {exec_dir}")
         checkpoint_model_path = os.path.join(checkpoint_dir, 'last.ckpt')
-    # The training resumes from a specific epoch checkpoint of the last execution of model variant `model_variant`
     else:
         logging.info(f"Resuming training from location: {exec_dir} and model at epoch {args.checkpoint_model_id}")
         checkpoint_model_path = os.path.join(exec_dir,

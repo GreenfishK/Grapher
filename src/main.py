@@ -65,8 +65,8 @@ if args.run in ['train', 'test']:
 if args.run == "train":
     train.train(args, device)
 elif args.run == "test":
-    test.test(args, model_variant, device)
+    test.test(args, device)
 elif args.run == "inference":
-    generate.generate(args, model_variant, device)
+    generate.generate(args, device)
 else:
     raise ValueError("The train argument must be one of the three values: train, test, inference.")

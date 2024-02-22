@@ -294,9 +294,7 @@ def setup_exec_env(eval_dir: str, from_scratch: bool) -> str:
         return os.path.join(eval_dir, last_exec_dir_b.decode())
 
     if from_scratch or not valid_dirs:
-        training_start_tmstmp = os.environ['CURRENT_DATETIME']
-        new_exec_dir = os.path.join(eval_dir, training_start_tmstmp)
-        os.makedirs(new_exec_dir, exist_ok=True)
+        new_exec_dir = os.environ['EXEC_DIR']
         os.makedirs(os.path.join(new_exec_dir, 'checkpoints'), exist_ok=True)
         os.makedirs(os.path.join(new_exec_dir, 'valid'), exist_ok=True)
         os.makedirs(os.path.join(new_exec_dir, 'test'), exist_ok=True)

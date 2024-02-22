@@ -11,7 +11,7 @@ python_args=(
     "--dataset" "webnlg"
     "--data_path" "${DATA_DIR}"
     "--num_data_workers" "${NUM_DATAWORKERS}"
-    "--checkpoint_model_id" "-1"
+    "--checkpoint_model_id" "${CHECKPOINT_MODEL_ID}"
     "--batch_size" "${BATCH_SIZE}"
     "--default_root_dir" "${ROOT_DIR}"
     "--accelerator" "gpu"

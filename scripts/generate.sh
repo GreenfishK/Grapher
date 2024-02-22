@@ -9,7 +9,7 @@ python_args=(
     "--run" "inference"
     "--edges_as_classes" "${MODEL_VARIANT}"
     "--dataset" "webnlg"
-    "--checkpoint_model_id" "-2"
+    "--checkpoint_model_id" "${CHECKPOINT_MODEL_ID}"
     "--default_root_dir" "${ROOT_DIR}"
     "--inference_input_text" "'Danielle Harris had a main role in Super Capers, a 98 minute long movie.'"
 )
