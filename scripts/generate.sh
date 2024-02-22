@@ -9,8 +9,8 @@ python_args=(
     "--run" "inference"
     "--edges_as_classes" "${MODEL_VARIANT}"
     "--dataset" "webnlg"
-    "--checkpoint_model_id" "-2"
-    "--default_root_dir" "${STORAGE_DRIVE}/data/core/grapher/output"
+    "--checkpoint_model_id" "${CHECKPOINT_MODEL_ID}"
+    "--default_root_dir" "${ROOT_DIR}"
     "--inference_input_text" "'Danielle Harris had a main role in Super Capers, a 98 minute long movie.'"
 )
 
@@ -27,7 +27,7 @@ if [[ $HARDWARE_SETTING == s* ]]; then
         --gres=gpu:${NUM_GPUS_PER_NODE} \
         --ntasks-per-node=${NUM_GPUS_PER_NODE} \
         --time=1-0 \
-        --output=${STORAGE_DRIVE}/data/core/grapher/output/slurm-%A_%a.out \
+        --output=${EXEC_DIR}/slurm-%A_%a.out \
         --mail-type=BEGIN \
         --mail-user=filip.kovacevic@tuwien.ac.at \
         main.slm "${python_args[@]}"
@@ -38,7 +38,7 @@ if [[ $HARDWARE_SETTING == s* ]]; then
         --gres=gpu:${NUM_GPUS_PER_NODE} \
         --ntasks-per-node=${NUM_GPUS_PER_NODE} \
         --time=1-0 \
-        --output=${STORAGE_DRIVE}/data/core/grapher/output/slurm-%A_%a.out \
+        --output=${EXEC_DIR}/slurm-%A_%a.out \
         --mail-type=BEGIN \
         --mail-user=filip.kovacevic@tuwien.ac.at \
         main.slm "${python_args[@]}"
