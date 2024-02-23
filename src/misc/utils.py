@@ -15,7 +15,7 @@ failed_edge = 'failed edge'
 nonode_str = '__no_node__'
 
 
-def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edges, edges_as_classes, focal_loss_gamma):
+def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edges, edges_as_classes, focal_loss_gamma) -> torch.Tensor:
     """
     Compute the loss for the model during training. 
     Compute the cross-entropy loss for nodes and edges separately. 
@@ -31,7 +31,7 @@ def compute_loss(criterion, logits_nodes, logits_edges, target_nodes, target_edg
         * focal_loss_gamma: Parameter for the focal loss function.
     
     Returns:
-        The total loss as the sum of `loss_nodes` and `loss_edges`.
+        The total loss as the sum of `loss_nodes` and `loss_edges` as tensor.
     
     """
 

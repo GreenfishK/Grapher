@@ -26,10 +26,10 @@ if [[ $HARDWARE_SETTING == s* ]]; then
         --nodes=${NUM_NODES} \
         --gres=gpu:${NUM_GPUS_PER_NODE} \
         --ntasks-per-node=${NUM_GPUS_PER_NODE} \
-        --time=1-0 \
+        --time=${TIME} \
         --output=${EXEC_DIR}/slurm-%A_%a.out \
         --mail-type=BEGIN \
-        --mail-user=filip.kovacevic@tuwien.ac.at \
+        --mail-user=${USER_MAIL} \
         main.slm "${python_args[@]}"
     else
         sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING} \
@@ -37,10 +37,10 @@ if [[ $HARDWARE_SETTING == s* ]]; then
         --qos=${QOS} \
         --gres=gpu:${NUM_GPUS_PER_NODE} \
         --ntasks-per-node=${NUM_GPUS_PER_NODE} \
-        --time=1-0 \
+        --time=${TIME} \
         --output=${EXEC_DIR}/slurm-%A_%a.out \
         --mail-type=BEGIN \
-        --mail-user=filip.kovacevic@tuwien.ac.at \
+        --mail-user=${USER_MAIL} \
         main.slm "${python_args[@]}"
     fi
 else

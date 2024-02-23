@@ -83,7 +83,7 @@ class LitGrapher(pl.LightningModule):
         self.exec_dir=exec_dir
         self.lr = lr 
         self.validation_step_outputs = [] 
-        self.training_step_outputs = []
+        self.training_resumed = False
 
     # Override
     def training_step(self, batch, batch_idx):
@@ -121,13 +121,12 @@ class LitGrapher(pl.LightningModule):
         # train_loss_epoch is accessible in ModelCheckpoint.
         self.log('train_loss', loss, on_step=True, on_epoch=True,
                  logger=True, sync_dist=True, batch_size=text_input_ids.size(0))
-        
-        self.training_step_outputs.append(loss) 
 
         # Free up GPU memory
         torch.cuda.empty_cache()
         
         return loss
+
 
     # Override
     def validation_step(self, batch, batch_idx):
@@ -139,10 +138,15 @@ class LitGrapher(pl.LightningModule):
         val_outputs = self.eval_step(batch, batch_idx, 'valid')
         return val_outputs  
     
+
     def on_validation_epoch_end(self):
        self.eval_epoch_end('valid')
        logging.info("Validation epoch ended")
     
+
+    # def on_train_epoch_end(self):
+    #   pass
+
     # Override
     def test_step(self, batch, batch_idx):
         """
@@ -153,9 +157,11 @@ class LitGrapher(pl.LightningModule):
         val_outputs =  self.eval_step(batch, batch_idx, 'test')
         return val_outputs
     
+
     def on_test_epoch_end(self):
         self.eval_epoch_end('test')
         logging.info("Test epoch ended")
+
 
     # Override
     def configure_optimizers(self):
@@ -222,16 +228,24 @@ class LitGrapher(pl.LightningModule):
         
         return val_outputs
 
+
     # For validation and testing
     def eval_epoch_end(self, split):
         """
         Compute precision, recall, and F1 for the `split` set, 
         accumulate them accross devices, and log these scores to TensorBoard.
         """
+        #logging.info(self.trainer.ckpt_path)
+        #if self.training_resumed is False and self.trainer.ckpt_path is not None:
+        #    logging.info("The eval_epoch_end hook is skipped. This is a fix to the issue that " \
+        #                 "this hook is entered when training resumes from a model checkpoint.")
+        #    self.training_resumed = True
+        #    return
 
         dec_target_all = []
         dec_pred_all = []
 
+        logging.info(f"Number of validation step outputs: {len(self.validation_step_outputs)}")
         for out in self.validation_step_outputs:
             dec_target_all += out['dec_target']
             dec_pred_all += out['dec_pred']

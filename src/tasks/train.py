@@ -85,27 +85,26 @@ def train(args, device):
                 break
     
     # Create plan to save the model periodically.
-    # {train_loss_epoch} gets logged for the previous epoch .  
     # {train_loss_epoch} is the weighted average over the batch_size of the values logged in each training_step
-    # Do not use {train_epoch}! This is just the loss from the last step of the epoch.
+    # The hook on_validation_epoch_end gets called before on_train_epoch_end!
     checkpoint_dir = os.path.join(exec_dir, 'checkpoints')
     checkpoint_callback = ModelCheckpoint(
         dirpath=checkpoint_dir,
         filename='model-{epoch:02d}-{train_loss_epoch:.2f}-{F1:.2f}',
         every_n_epochs=args.every_n_epochs, # Saves a checkpoint every n epochs 
-        save_on_train_epoch_end=False, # Checkpointing runs at the end of validation
+        save_on_train_epoch_end=True, # Checkpointing runs at the end of training
         save_last=True, # saves a last.ckpt whenever a checkpoint file gets saved
         save_top_k=-1, # Save all models
     )
 
     # If three consecutive validation checks yield no improvement, the trainer stops.
     # Monitor validation loss to prevent overfitting
-    # WARNING: train_loss_epoch is not available in first epoch.
     early_stopping_callback = EarlyStopping(
         monitor="train_loss_epoch",
         min_delta=0.01,
         mode="min",
-        patience=3  
+        patience=3,
+        check_on_train_epoch_end=True
     )
 
     # Logger for TensorBoard
