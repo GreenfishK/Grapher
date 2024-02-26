@@ -18,13 +18,16 @@ def test(args,  device):
     
     checkpoint_dir = os.path.join(exec_dir, 'checkpoints')
     if args.checkpoint_model_id == -1:
-        logging.info(f"Resuming test from location: {exec_dir}")
+        logging.info(f"Test last.ckpt model in: {exec_dir}")
         checkpoint_model_path = os.path.join(checkpoint_dir, 'last.ckpt')
-    else:
-        logging.info(f"Resuming test from location: {exec_dir} and model at epoch {args.checkpoint_model_id}")
+    elif args.checkpoint_model_id >= 0:
+        logging.info(f"Test model at epoch {args.checkpoint_model_id} in: {exec_dir}")
         checkpoint_model_path = os.path.join(exec_dir,
                                             'checkpoints',
                                             model_file_name(exec_dir, args.checkpoint_model_id))
+    else:
+        logging.error("Please provide a valid checkpoint model ID (see possible parameters in .env)")
+        return
 
     assert os.path.exists(checkpoint_model_path), 'Provided checkpoint does not exists, cannot run the test'
 
@@ -37,15 +40,15 @@ def test(args,  device):
     # Load data module
     # -------------------------------------------------------------------------------
     dm = GraphDataModule(tokenizer_class=T5Tokenizer,
-                            tokenizer_name=grapher.transformer_name,
-                            cache_dir=grapher.cache_dir,
-                            data_path=args.data_path,
-                            dataset=args.dataset,
-                            batch_size=args.batch_size,
-                            num_data_workers=args.num_data_workers,
-                            max_nodes=grapher.max_nodes,
-                            max_edges=grapher.max_edges,
-                            edges_as_classes=grapher.edges_as_classes)
+                         tokenizer_name=grapher.transformer_name,
+                         cache_dir=grapher.cache_dir,
+                         data_path=args.data_path,
+                         dataset=args.dataset,
+                         batch_size=args.batch_size,
+                         num_data_workers=args.num_data_workers,
+                         max_nodes=grapher.max_nodes,
+                         max_edges=grapher.max_edges,
+                         edges_as_classes=grapher.edges_as_classes)
 
     dm.setup(stage='test')
 

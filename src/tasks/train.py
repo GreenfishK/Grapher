@@ -36,7 +36,6 @@ def train(args, device):
 
     # -------------------- Engine incl. Model ---------------------
     # Create execution environment for training, validation and test output files
-    # exec_dir = setup_exec_env(os.environ['EVAL_DIR'], from_scratch = True if args.checkpoint_model_id < -1 else False)
     exec_dir = os.environ['EXEC_DIR']
     grapher = LitGrapher(exec_dir=exec_dir,
                         cache_dir=args.cache_dir,

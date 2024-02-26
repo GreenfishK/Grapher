@@ -19,11 +19,11 @@ class GraphDataset(Dataset):
         * edges_as_classes (bool): Flag indicating whether edges are treated as classes.
 
     Methods:
-        * parse_graph_data(): Parses the graph data and extracts nodes and edges.
+        * _parse_graph_data(): Parses the graph data and extracts nodes and edges.
         * __len__(): Returns the total number of samples in the dataset.
         * __getitem__(index): Retrieves a sample at the given index.
         * _build_inputs_with_special_tokens(token_ids_0, _): Builds inputs with special tokens.
-        * _collate_fn(data): Collates data samples into batches.
+        * collate_fn(data): Collates data samples into batches.
     """
 
     def __init__(
@@ -50,7 +50,7 @@ class GraphDataset(Dataset):
 
         self.edges_as_classes = edges_as_classes
 
-        self.parse_graph_data()
+        self._parse_graph_data()
 
     def __len__(self):
         return len(self.text)
@@ -59,7 +59,7 @@ class GraphDataset(Dataset):
         item = (self.text[index], self.node[index], self.edge[index], self.edge_ind[index])
         return item
 
-    def parse_graph_data(self):
+    def _parse_graph_data(self):
 
         all_nodes = []
         all_edges = []
@@ -101,7 +101,7 @@ class GraphDataset(Dataset):
         # T5:   <pad_id> token_ids_0 <eos_id>
         return [self.tokenizer.pad_token_id] + token_ids_0 + [self.tokenizer.eos_token_id]
 
-    def _collate_fn(self, data):
+    def collate_fn(self, data):
         text_list = []
         node_list = []
         edge_list = []

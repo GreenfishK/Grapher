@@ -33,7 +33,7 @@ cd src
 # Check if $HARDWARE_SETTING starts with "s" for SLURM
 if [[ $HARDWARE_SETTING == s* ]]; then
     if [[ ${NUM_NODES} -gt 1 ]]; then
-        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING} \
+        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING}_%A \
         --partition=${PARTITION} \
         --qos=${QOS} \
         --nodes=${NUM_NODES} \
@@ -45,7 +45,7 @@ if [[ $HARDWARE_SETTING == s* ]]; then
         --mail-user=${USER_MAIL} \
         main.slm "${python_args[@]}"
     else
-        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING} \
+        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING}_%A \
         --partition=${PARTITION} \
         --qos=${QOS} \
         --gres=gpu:${NUM_GPUS_PER_NODE} \

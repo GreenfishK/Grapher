@@ -9,6 +9,11 @@ import logging
 
 
 class FocalLoss(nn.modules.loss._WeightedLoss):
+    """
+    Paper Section 2.4 - Imbalanced Edge Distribution.
+    Down-weight the CE loss for well-classified samples (in our case NO_EDGE) 
+    and increase the CE loss for misclassified ones.
+    """
 
     def __init__(self, gamma, weight=None):
         super(FocalLoss, self).__init__(weight)
@@ -144,8 +149,10 @@ class LitGrapher(pl.LightningModule):
        logging.info("Validation epoch ended")
     
 
+    # This hook gets called after on_validation_epoch_end. This is just a reminder.
     # def on_train_epoch_end(self):
     #   pass
+
 
     # Override
     def test_step(self, batch, batch_idx):
@@ -235,12 +242,6 @@ class LitGrapher(pl.LightningModule):
         Compute precision, recall, and F1 for the `split` set, 
         accumulate them accross devices, and log these scores to TensorBoard.
         """
-        #logging.info(self.trainer.ckpt_path)
-        #if self.training_resumed is False and self.trainer.ckpt_path is not None:
-        #    logging.info("The eval_epoch_end hook is skipped. This is a fix to the issue that " \
-        #                 "this hook is entered when training resumes from a model checkpoint.")
-        #    self.training_resumed = True
-        #    return
 
         dec_target_all = []
         dec_pred_all = []

@@ -42,7 +42,7 @@ python_args=(
 )
 
 cd src
-echo ${EXEC_DIR}
+
 # Check if $HARDWARE_SETTING starts with "s" for SLURM
 if [[ $HARDWARE_SETTING == s* ]]; then
     # Run the training with sbatch

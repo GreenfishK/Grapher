@@ -34,12 +34,14 @@ class GraphDataModule(pl.LightningDataModule):
                  edges_as_classes):
         super().__init__()
 
+        # Setup tokenizer and add special tokens
         # 150 as max tokens was set based on what was found in the grapher.Grapher.sample function
         self.tokenizer = tokenizer_class.from_pretrained(tokenizer_name, cache_dir=cache_dir,
-                                                         model_max_length=150, legacy=True)
+                                                         model_max_length=512, legacy=True)
         self.tokenizer.add_tokens('__no_node__')
         self.tokenizer.add_tokens('__no_edge__')
         self.tokenizer.add_tokens('__node_sep__')
+
         self.batch_size = batch_size
         self.num_data_workers = num_data_workers
         self.data_path = data_path
@@ -54,7 +56,7 @@ class GraphDataModule(pl.LightningDataModule):
     # Override
     def prepare_data(self):
         """
-        Download the specified dataset in the self.dataset variable.
+        Download the dataset specified in `self.dataset`, splits it into train, dev and test, and saves the splits to disk.
         """
 
         if self.dataset == 'webnlg':
@@ -124,43 +126,27 @@ class GraphDataModule(pl.LightningDataModule):
         validation (dev.text, dev.graph), 
         and test data (test.text, test.graph) into GraphDataset
         """
-        edge_classes_path = os.path.join(self.output_path, 'edge.classes')
+
+        stage_dataset_mapping = {'fit': 'train', 'validate': 'dev', 'test': 'test'}
+        dataset = GraphDataset(tokenizer=self.tokenizer,
+                               text_data_path=os.path.join(self.output_path, f"{stage_dataset_mapping['stage']}.text"),
+                               graph_data_path=os.path.join(self.output_path, f"{stage_dataset_mapping['stage']}.graph"),
+                               edge_classes_path=os.path.join(self.output_path, 'edge.classes'),
+                               max_nodes=self.max_nodes,
+                               max_edges=self.max_edges,
+                               edges_as_classes=self.edges_as_classes)
 
         if stage == 'fit':
             logging.info("Load training data into GraphDataset.")
-            text_path = os.path.join(self.output_path, 'train.text')
-            graph_path = os.path.join(self.output_path, 'train.graph')
-            self.dataset_train = GraphDataset(tokenizer=self.tokenizer,
-                                               text_data_path=text_path,
-                                               graph_data_path=graph_path,
-                                               edge_classes_path=edge_classes_path,
-                                               max_nodes=self.max_nodes,
-                                               max_edges=self.max_edges,
-                                               edges_as_classes=self.edges_as_classes)
+            self.dataset_train = dataset
         elif stage == 'validate':
             logging.info("Load validation data (dev) into GraphDataset.")
-            text_path = os.path.join(self.output_path, 'dev.text')
-            graph_path = os.path.join(self.output_path, 'dev.graph')
-            self.dataset_dev = GraphDataset(tokenizer=self.tokenizer,
-                                            text_data_path=text_path,
-                                            graph_data_path=graph_path,
-                                            edge_classes_path=edge_classes_path,
-                                            max_nodes=self.max_nodes,
-                                            max_edges=self.max_edges,
-                                            edges_as_classes=self.edges_as_classes)
-
+            self.dataset_dev = dataset
         elif stage == 'test':
             logging.info("Testing the model.")
-            text_path = os.path.join(self.output_path, 'test.text')
-            graph_path = os.path.join(self.output_path, 'test.graph')
-            self.dataset_test = GraphDataset(tokenizer=self.tokenizer,
-                                             text_data_path=text_path,
-                                             graph_data_path=graph_path,
-                                             edge_classes_path=edge_classes_path,
-                                             max_nodes=self.max_nodes,
-                                             max_edges=self.max_edges,
-                                             edges_as_classes=self.edges_as_classes)
+            self.dataset_test = dataset
         else:
+            logging.error("Stage must be one of: fit, validate, test")
             return
 
 
@@ -168,7 +154,7 @@ class GraphDataModule(pl.LightningDataModule):
     def train_dataloader(self):
         return DataLoader(self.dataset_train,
                           batch_size=self.batch_size,
-                          collate_fn=self.dataset_train._collate_fn,
+                          collate_fn=self.dataset_train.collate_fn,
                           num_workers=self.num_data_workers,
                           shuffle=True, pin_memory=True)
 
@@ -177,7 +163,7 @@ class GraphDataModule(pl.LightningDataModule):
     def val_dataloader(self):
         return DataLoader(self.dataset_dev,
                           batch_size=self.batch_size,
-                          collate_fn=self.dataset_dev._collate_fn,
+                          collate_fn=self.dataset_dev.collate_fn,
                           num_workers=self.num_data_workers,
                           shuffle=False, pin_memory=True)
 
@@ -186,7 +172,7 @@ class GraphDataModule(pl.LightningDataModule):
     def test_dataloader(self):
         return DataLoader(self.dataset_test,
                           batch_size=self.batch_size,
-                          collate_fn=self.dataset_test._collate_fn,
+                          collate_fn=self.dataset_test.collate_fn,
                           num_workers=self.num_data_workers,
                           shuffle=False, pin_memory=True)
 

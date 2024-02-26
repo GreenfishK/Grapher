@@ -7,6 +7,12 @@ from torch import nn
 
 
 class Grapher(nn.Module):
+    """
+    Paper Section 2.1 - Node Generation: Text Nodes
+    * Uses a pre-trained encoder-decoder language model (T5).
+    * Translates textual input to a sequence of nodes, separated with special tokens.
+    """
+
     def __init__(self,
                  transformer_class,
                  transformer_name,
@@ -49,7 +55,7 @@ class Grapher(nn.Module):
             target_edges (torch.Tensor): Target edge tokens.
 
         Returns:
-            tuple: Tuple containing:
+            tuple:
                 - logits_nodes (torch.Tensor): Logits for node generation of shape (batch_size, seq_len, vocab_size).
                 - logits_edges (torch.Tensor): Logits for edge generation.
         """
@@ -62,11 +68,12 @@ class Grapher(nn.Module):
                                   ) 
         # Generate nodes
         logits_nodes = output.logits  # batch_size x seq_len x vocab_size
+        
+        # Generate edges
         joint_features = output.decoder_hidden_states[-1]  # batch_size x seq_len x hidden_dim
         gen_seq = logits_nodes.argmax(-1)
         features = self.split_nodes(gen_seq, joint_features)  # num_nodes x batch_size x hidden_dim
 
-        # Generate edges
         if self.edges_as_classes:
             logits_edges = self.edges(features)
         else:
@@ -112,7 +119,7 @@ class Grapher(nn.Module):
                                            output_hidden_states=True,
                                            output_scores=True,
                                            return_dict_in_generate=True,
-                                           max_length=150)
+                                           max_length=512)
 
         # -------------------- Sequence nodes --------------------
         # batch_size x hidden_dim x num_nodes
@@ -157,8 +164,6 @@ class EdgesGen(nn.Module):
 
         # num_nodes X num_nodes X batch_size X hidden_dim
         feats = features.unsqueeze(0).expand(num_nodes, -1, -1, -1)
-
-        # num_nodes*num_nodes*batch_size X hidden_dim
         hidden = (feats.permute(1, 0, 2, 3) - feats).reshape(-1, hidden_dim).contiguous()
 
         # set first token in output
@@ -176,6 +181,10 @@ class EdgesGen(nn.Module):
 
 
 class GRUDecoder(nn.Module):
+    """
+    Gated Rectified Unit. Similar to LSTM. 
+    Used as EdgeDecoder.
+    """
 
     def __init__(self, hidden_size, vocab_size):
         super(GRUDecoder, self).__init__()

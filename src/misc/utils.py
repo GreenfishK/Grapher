@@ -5,10 +5,7 @@ import torch
 import networkx as nx
 import os
 import json
-from datetime import datetime
-import logging
-import fcntl
-import errno
+
 
 failed_node = 'failed node'
 failed_edge = 'failed edge'
@@ -110,6 +107,9 @@ def decode_text(tokenizer, text_input_ids, bos_token_id, eos_token_id):
     * It iterates over each text sequence in the batch, finds the beginning-of-sequence and end-of-sequence tokens, 
     and decodes the text between them using the tokenizer.
     * It returns a list of decoded text strings.
+
+    Returns:
+        A list of decoded text strings.
     """
 
     text_decoded = []
@@ -144,7 +144,7 @@ def decode_graph(tokenizer, edge_classes, bnodes, bedges, edges_as_classes, node
         * eos_token_id: Token ID for the end-of-sequence token.
     
     Returns:
-        * A list of decoded triples for each graph in the batch.
+        A list of decoded triples for each graph in the batch.
 
     """
 
@@ -260,61 +260,11 @@ def _decode(cand, bos_token_id, eos_token_id, tokenizer, failed=failed_node):
     return s
 
 
-def setup_exec_env(eval_dir: str, from_scratch: bool) -> str:
-    """
-    Create a new execution directory which is named after the current timestamp and create 
-    subdiretories for the checkpoints as well as validation and test outputs. 
-    This is only done if the flag `from_scratch` is True or no last execution was found, 
-    If the there have been last executions, 
-    the path to the last execution directory will be returned.
-    Using a lock mechanism, it prevents parallel processes from creating another new execution directory, 
-    if one process has created one already.
-
-    Returns:
-        The path the the new or existing exectution directory.
-    """
-
-    if not os.path.exists(eval_dir):
-        os.makedirs(eval_dir, exist_ok=True)
-
-    # Filter directories by timestamp format
-    eval_dir_encoded = os.fsencode(eval_dir)
-    valid_dirs = []
-    for directory in os.listdir(eval_dir_encoded):
-        try: 
-            timestamp = datetime.strptime(directory.decode(), '%Y-%m-%d %H:%M:%S')
-            valid_dirs.append((timestamp, directory))
-        except ValueError:
-            continue
-
-    # from_scratch = -2 .. itentiallaly new dir
-    # not valid_dirs = no training yet
-    def last_exec_dir(eval_dir: str, valid_dirs: list):
-        last_exec_dir_b = max(valid_dirs, key=lambda x: x[0])[1]
-        return os.path.join(eval_dir, last_exec_dir_b.decode())
-
-    if from_scratch or not valid_dirs:
-        new_exec_dir = os.environ['EXEC_DIR']
-        os.makedirs(os.path.join(new_exec_dir, 'checkpoints'), exist_ok=True)
-        os.makedirs(os.path.join(new_exec_dir, 'valid'), exist_ok=True)
-        os.makedirs(os.path.join(new_exec_dir, 'test'), exist_ok=True)
-
-        logging.info(f"Created new directory: {new_exec_dir} with three sub directories")
-        return new_exec_dir
-    
-    if valid_dirs:
-        last_exec_dir = last_exec_dir(eval_dir, valid_dirs)
-        logging.info(f"The training resumes from the last execution directory: {last_exec_dir}")
-        return last_exec_dir
-
-
-
 def model_file_name(exec_dir: str, epoch: int) -> str:
     """
     Returns the file name of the model for a specific `epoch` that resides within `exec_dir/checkpoints`.
     """
 
-    exec_dir_encoded = os.fsencode(exec_dir)
-    for model in os.listdir(os.path.join(exec_dir_encoded, "checkpoints")):
+    for model in os.listdir(os.path.join(exec_dir, "checkpoints")):
         if model.startswith(f"model-epoch={str(epoch).zfill(2)}"):
             return model
