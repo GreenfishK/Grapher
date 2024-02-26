@@ -124,13 +124,13 @@ class GraphDataModule(pl.LightningDataModule):
         """
         Load training (train.text, train.graph),
         validation (dev.text, dev.graph), 
-        and test data (test.text, test.graph) into GraphDataset
+        or test data (test.text, test.graph) into GraphDataset
         """
 
         stage_dataset_mapping = {'fit': 'train', 'validate': 'dev', 'test': 'test'}
         dataset = GraphDataset(tokenizer=self.tokenizer,
-                               text_data_path=os.path.join(self.output_path, f"{stage_dataset_mapping['stage']}.text"),
-                               graph_data_path=os.path.join(self.output_path, f"{stage_dataset_mapping['stage']}.graph"),
+                               text_data_path=os.path.join(self.output_path, f"{stage_dataset_mapping[stage]}.text"),
+                               graph_data_path=os.path.join(self.output_path, f"{stage_dataset_mapping[stage]}.graph"),
                                edge_classes_path=os.path.join(self.output_path, 'edge.classes'),
                                max_nodes=self.max_nodes,
                                max_edges=self.max_edges,

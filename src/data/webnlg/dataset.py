@@ -7,7 +7,8 @@ import logging
 
 class GraphDataset(Dataset):
     """
-    PyTorch Dataset for loading graph and text data.
+    PyTorch Dataset for parsing graph and text data 
+    and transforming mini-batches of data into a tuple of tensors.
 
     Args:
         * tokenizer (Tokenizer): Tokenizer object for text tokenization.
@@ -19,9 +20,9 @@ class GraphDataset(Dataset):
         * edges_as_classes (bool): Flag indicating whether edges are treated as classes.
 
     Methods:
-        * _parse_graph_data(): Parses the graph data and extracts nodes and edges.
         * __len__(): Returns the total number of samples in the dataset.
         * __getitem__(index): Retrieves a sample at the given index.
+        * _parse_graph_data(): Parses the graph data and extracts nodes and edges.
         * _build_inputs_with_special_tokens(token_ids_0, _): Builds inputs with special tokens.
         * collate_fn(data): Collates data samples into batches.
     """
@@ -101,7 +102,13 @@ class GraphDataset(Dataset):
         # T5:   <pad_id> token_ids_0 <eos_id>
         return [self.tokenizer.pad_token_id] + token_ids_0 + [self.tokenizer.eos_token_id]
 
-    def collate_fn(self, data):
+    def collate_fn(self, data) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor] :
+        """
+        Takes the tuples from a mini-batch `data`, where a tuple is defined in __getitem__.
+        Returns a tuple of tensors that has the following shape: 
+            * (text_input_ids; text_input_attention_mask; node_input_ids; node_input_attention_mask; edge_input_ids)
+        """
+
         text_list = []
         node_list = []
         edge_list = []
@@ -118,33 +125,18 @@ class GraphDataset(Dataset):
 
         # ----------------- TEXT ----------------------
 
-        text_batch = self.tokenizer(
-            text_list,
-            add_special_tokens=True,
-            padding=True,
-            return_tensors='pt'
-        )
-
-        collated_data = (
-            text_batch['input_ids'],
-            text_batch['attention_mask'],
-        )
+        text_batch = self.tokenizer(text_list, add_special_tokens=True,
+                                     padding=True, return_tensors='pt')
+        collated_data = (text_batch['input_ids'], text_batch['attention_mask'])
 
         # ------------------ NODES -------------------------
         node_list_text = []
         for node in node_list:
             node_list_text.append(' __node_sep__ '.join(node) + ' __node_sep__')
 
-        node_batch = self.tokenizer(node_list_text,
-                                    add_special_tokens=True,
-                                    padding=True,
-                                    return_tensors='pt'
-                                    )
-
-        collated_data += (
-            node_batch['input_ids'],
-            node_batch['attention_mask'],
-        )
+        node_batch = self.tokenizer(node_list_text, add_special_tokens=True,
+                                    padding=True, return_tensors='pt')
+        collated_data += (node_batch['input_ids'], node_batch['attention_mask'])
 
         # ----------------- EDGES ----------------------
         if self.edges_as_classes:
@@ -152,7 +144,8 @@ class GraphDataset(Dataset):
             edge_list_classes = [[self.edge_classes.index(edge) if edge in self.edge_classes else len(self.edge_classes)-1 for edge in edges] for edges in edge_list]
 
             # num_nodes X num_nodes X batch_size
-            edge_mat = torch.ones(self.max_nodes, self.max_nodes, len(data))*self.edge_classes.index('__no_edge__')
+            # Adjacency matrix (?)
+            edge_mat = torch.ones(self.max_nodes, self.max_nodes, len(data)) * self.edge_classes.index('__no_edge__')
 
             for i, (edges_cl, edge_ind) in enumerate(zip(edge_list_classes, edge_ind_list)):
                 for e_p, e_i in zip(edges_cl, edge_ind):
@@ -162,39 +155,27 @@ class GraphDataset(Dataset):
 
         else:  # edges full
             flat_edge = [node for nodes in edge_list for node in nodes]
+            flat_edge_tok = self.tokenizer(flat_edge, add_special_tokens=True,
+                                            padding=False, return_attention_mask=False)['input_ids']
 
-            flat_edge_tok = self.tokenizer(
-                flat_edge,
-                add_special_tokens=True,
-                padding=False,
-                return_attention_mask=False
-            )['input_ids']
-
-            no_edge_tok = self.tokenizer(
-                ['__no_edge__'],
-                add_special_tokens=True,
-                padding=False,
-                return_attention_mask=False
-            )['input_ids'][0]
+            no_edge_tok = self.tokenizer(['__no_edge__'], add_special_tokens=True,
+                                         padding=False, return_attention_mask=False)['input_ids'][0]
 
             cumsum = np.cumsum([0] + [len(node) for node in edge_list])
-
             edge_batch = [flat_edge_tok[i:j] for (i,j) in zip(cumsum[:-1], cumsum[1:])]
-
             max_len = max([len(item) for item in flat_edge_tok])
-
+            
             edge_batch_padded = []
             for edges in edge_batch:
                 edge_batch_padded.append([i + [self.tokenizer.pad_token_id] * (max_len - len(i)) for i in edges])
 
             no_edge_tok = np.array(no_edge_tok + [self.tokenizer.pad_token_id] * (max_len - len(no_edge_tok)))
-
+            
+            # Adjacency matrix (?)
             edge_mat = np.tile(no_edge_tok, (len(data), self.max_nodes, self.max_nodes, 1))
-
             for i, (edges_padded, edge_ind) in enumerate(zip(edge_batch_padded, edge_ind_list)):
                 for e_p, e_i in zip(edges_padded, edge_ind):
                     edge_mat[i, e_i[0], e_i[1]] = e_p
-
             edge_mat = torch.as_tensor(edge_mat).permute(1, 2, 0, 3)
 
             collated_data += (edge_mat,)
