@@ -5,7 +5,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=2-23
-#SBATCH --output=/gpfs/data/fs72332/fkovacev/data/core/grapher_repro/output/slurm-%A_%a.out 
+#SBATCH --output=/gpfs/data/fs72332/fkovacev/data/core/grapher_repro/output/slurm-%A_%a.out
 #SBATCH --mail-type=BEGIN 
 #SBATCH --mail-user=filip.kovacevic@tuwien.ac.at 
 
