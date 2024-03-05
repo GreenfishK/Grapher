@@ -2,17 +2,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-# Logits: Raw, unnormalized final scores of the model (e.g. transformer) before softmax is applied.
-# scores: probabilities after softmax.
-
 
 class Grapher(nn.Module):
-    """
-    Paper Section 2.1 - Node Generation: Text Nodes
-    * Uses a pre-trained encoder-decoder language model (T5).
-    * Translates textual input to a sequence of nodes, separated with special tokens.
-    """
-
     def __init__(self,
                  transformer_class,
                  transformer_name,
@@ -42,46 +33,6 @@ class Grapher(nn.Module):
         else:
             self.edges = EdgesGen(self.hidden_dim, vocab_size, bos_token_id)
 
-    # Override
-    def forward(self, text, text_mask, target_nodes, target_nodes_mask, target_edges):
-        """
-        Forward pass of the Grapher model.
-
-        Args:
-            text (torch.Tensor): Input text tokens.
-            text_mask (torch.Tensor): Attention mask for the input text.
-            target_nodes (torch.Tensor): Decoder input tokens for generating nodes.
-            target_nodes_mask (torch.Tensor): Attention mask for the decoder input tokens.
-            target_edges (torch.Tensor): Target edge tokens.
-
-        Returns:
-            tuple:
-                - logits_nodes (torch.Tensor): Logits for node generation of shape (batch_size, seq_len, vocab_size).
-                - logits_edges (torch.Tensor): Logits for edge generation.
-        """
-        
-        output = self.transformer(input_ids=text,
-                                  attention_mask=text_mask,
-                                  output_hidden_states=True,
-                                  decoder_input_ids=target_nodes,
-                                  decoder_attention_mask=target_nodes_mask
-                                  ) 
-        # Generate nodes
-        logits_nodes = output.logits  # batch_size x seq_len x vocab_size
-        
-        # Generate edges
-        joint_features = output.decoder_hidden_states[-1]  # batch_size x seq_len x hidden_dim
-        gen_seq = logits_nodes.argmax(-1)
-        features = self.split_nodes(gen_seq, joint_features)  # num_nodes x batch_size x hidden_dim
-
-        if self.edges_as_classes:
-            logits_edges = self.edges(features)
-        else:
-            seq_len_edge = target_edges.size(3)
-            logits_edges = self.edges(features, seq_len_edge)
-
-        return logits_nodes, logits_edges
-    
     def split_nodes(self, output_ids, features):
 
         # features: batch_size x seq_len x hidden_dim
@@ -101,42 +52,63 @@ class Grapher(nn.Module):
 
         return split_features
 
-    def sample(self, text: torch.Tensor, text_mask: torch.Tensor):
-        """
-        Generates samples from the grapher model during validation or testing.
+    def forward(self, text, text_mask, target_nodes, target_nodes_mask, target_edges):
 
-        Args:
-            text (torch.Tensor): Input tensor containing tokenized text sequences.
-            text_mask (torch.Tensor): Attention mask tensor for the input text sequences.
+        # NODES
+        output = self.transformer(input_ids=text,
+                                  attention_mask=text_mask,
+                                  decoder_input_ids=target_nodes,
+                                  decoder_attention_mask=target_nodes_mask,
+                                  output_hidden_states=True)
 
-        Returns:
-            Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-                - Generated node sequences.
-                - Generated edge sequences.
-        """
-        output = self.transformer.generate(input_ids=text,
-                                           attention_mask=text_mask,
-                                           output_hidden_states=True,
-                                           output_scores=True,
-                                           return_dict_in_generate=True,
-                                           max_length=512)
+        logits_nodes = output.logits  # batch_size x seq_len x vocab_size
+        joint_features = output.decoder_hidden_states[-1]  # batch_size x seq_len x hidden_dim
 
-        # -------------------- Sequence nodes --------------------
-        # batch_size x hidden_dim x num_nodes
-        seq_nodes = output.sequences[:, 1:]
+        gen_seq = logits_nodes.argmax(-1)
 
-        # -------------------- Sequence edges --------------------
-        # batch_size x seq_len x hidden_dim
-        joint_features = torch.cat([h[-1] for h in output.decoder_hidden_states], 1)
-        features = self.split_nodes(seq_nodes, joint_features)
+        features = self.split_nodes(gen_seq, joint_features)  # num_nodes x batch_size x hidden_dim
+
+        # EDGES
         if self.edges_as_classes:
             logits_edges = self.edges(features)
         else:
-            logits_edges = self.edges(features, self.default_seq_len_edge)
+            seq_len_edge = target_edges.size(3)
+            logits_edges = self.edges(features, seq_len_edge)
+
+        return logits_nodes, logits_edges
+
+    def sample(self, text, text_mask):
+
+        # NODES
+        output = self.transformer.generate(input_ids=text,
+                                           max_length=150,
+                                           attention_mask=text_mask,
+                                           output_hidden_states=True,
+                                           output_scores=True,
+                                           return_dict_in_generate=True)
+
+        seq_nodes = output.sequences[:, 1:]
+
+        logits_nodes = output.scores  # list of seq_len of batch_size x vocab_size
+        logits_nodes = torch.cat([l.unsqueeze(0) for l in logits_nodes], 0).permute(1, 0, 2)
+
+        # batch_size x seq_len x hidden_dim
+        joint_features = torch.cat([h[-1] for h in output.decoder_hidden_states], 1)
+
+        seq_len_edge = self.default_seq_len_edge
+
+        # batch_size x hidden_dim x num_nodes
+        features = self.split_nodes(seq_nodes, joint_features)
+
+        # EDGES
+        if self.edges_as_classes:
+            logits_edges = self.edges(features)
+        else:
+            logits_edges = self.edges(features, seq_len_edge)
 
         seq_edges = logits_edges.argmax(-1)
 
-        return seq_nodes, seq_edges
+        return logits_nodes, seq_nodes, logits_edges, seq_edges
 
 
 class EdgesGen(nn.Module):
@@ -146,8 +118,7 @@ class EdgesGen(nn.Module):
         self.vocab_size = vocab_size
         self.bos_token = bos_token
         self.edgeDecoder = GRUDecoder(hidden_dim, vocab_size)
-    
-    # Override
+
     def forward(self, features, seq_len):
 
         # features: num_nodes X batch_size X hidden_dim
@@ -164,6 +135,8 @@ class EdgesGen(nn.Module):
 
         # num_nodes X num_nodes X batch_size X hidden_dim
         feats = features.unsqueeze(0).expand(num_nodes, -1, -1, -1)
+
+        # num_nodes*num_nodes*batch_size X hidden_dim
         hidden = (feats.permute(1, 0, 2, 3) - feats).reshape(-1, hidden_dim).contiguous()
 
         # set first token in output
@@ -181,19 +154,15 @@ class EdgesGen(nn.Module):
 
 
 class GRUDecoder(nn.Module):
-    """
-    Gated Rectified Unit. Similar to LSTM. 
-    Used as EdgeDecoder.
-    """
 
     def __init__(self, hidden_size, vocab_size):
         super(GRUDecoder, self).__init__()
 
         self.gru = nn.GRU(hidden_size, hidden_size, batch_first=True, num_layers=1)
         self.out = nn.Linear(hidden_size, vocab_size)
+
         self.embedding = nn.Embedding(vocab_size, hidden_size)
 
-    # Override
     def forward(self, x, hidden):
 
         # x: bsize
@@ -232,7 +201,6 @@ class EdgesClass(nn.Module):
             self.layers.add_module(f'dropout{l}', nn.Dropout(dropout_rate))
         self.layers.add_module('last', nn.Linear(dim, num_classes))
 
-    # Override
     def forward(self, features):
 
         # features: num_nodes X batch_size X hidden_dim

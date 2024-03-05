@@ -1,4 +1,5 @@
 from typing import List, Any
+
 from os.path import join
 from xml.etree.ElementTree import Element, SubElement
 from xml.etree import ElementTree
@@ -30,23 +31,20 @@ def create_xml(data, categories, ts_header, t_header):
 
 
 def xml_prettify(elem):
-    """
-    Return a pretty-printed XML string for the Element.
-    source : https://pymotw.com/2/xml/etree/ElementTree/create.html
+    """Return a pretty-printed XML string for the Element.
+       source : https://pymotw.com/2/xml/etree/ElementTree/create.html
     """
     rough_string = ElementTree.tostring(elem, 'utf-8')
     reparsed = minidom.parseString(rough_string)
     return reparsed.toprettyxml(indent="  ")
 
 
-def save_webnlg_rdf(hyps: Any, refs: Any, categories: List, out_dir: str, iteration: str, logger: Any = None):
-    """
-    Create a reference and a hypothesis XML file.
-
-    Returns:
-        The file XML file paths.
-    """
-    
+def save_webnlg_rdf(hyps: Any,
+                    refs: Any,
+                    categories: List,
+                    out_dir: str,
+                    iteration: str,
+                    logger: Any = None):
     mprint = logger.info if (logger is not None) else print
 
     if len(refs) != len(hyps):

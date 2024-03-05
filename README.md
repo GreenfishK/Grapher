@@ -25,67 +25,65 @@ Edge construction, using generation (e.g.,GRU) or a classifier head. Blue circle
 </p>
 
 ## Environment
-Install miniconda and create a conda environment with the following command, which also sets the python version:
-`conda create -n data_science python=3.10.6`
-Activate your conda environment with
-`conda activate data_science`
-Install the requirements.txt file
-`pip install -r requirements.txt`
+To run this code, please install PyTorch and Pytorch Lightning (we tested the code on Pytorch 1.13 and Pytorch Lightning 1.8.1)
   
 
 ## Setup   
 Install dependencies   
 ```bash
 # clone project   
-git clone git@github.com:GreenfishK/Grapher.git
+git clone git@github.com:IBM/Grapher.git
+
+# navigate to the directory
+cd Grapher
+
+# clone an external repository for reading the data
+git clone https://gitlab.com/webnlg/corpus-reader.git corpusreader
 
 # clone another external repositories for scoring the results
-cd cd Grapher/src
-git submodule add https://github.com/WebNLG/WebNLG-Text-to-triples.git WebNLG_Text_to_triples
- ```
-
+git clone https://github.com/WebNLG/WebNLG-Text-to-triples.git WebNLG_Text_to_triples
+ ```   
 ## Data
-We pull the WebNLG 3.0 dataset from hugging face. It is done automatically in the script datasets.py.
 
+WebNLG 3.0 dataset   
+ ```bash
+# download the dataset   
+git clone https://gitlab.com/shimorina/webnlg-dataset.git
+```
 
 ## How to train
-If you run your training on a single, low resource GPU, set <script_set> to single_node_ti.If you run your training on two a40 GPUs set <script_set> to single_node_a40 If you run your training on two nodes, each with two a40 GPUs, using SLURM, set <script_set> to hpc. Feel free to change the parameters in the sripts.
+There are two scripts to run two versions of the algorithm
 ```bash
 # naviagate to scripts directory
-cd src/scripts/<script_set>
-```
-There are two scripts to run two variantes of the model:
+cd scripts
 
-### run Grapher with the edge generation head
-Description from the paper: The advantage of generation is the ability to construct any edge sequence, including ones unseen during training, at the risk of not matching the target edge token sequence exactly.
-```
-./train_gen.sh
-```
+# run Grapher with the edge generation head
+bash train_gen.sh
 
-### run Grapher with the classifier edge head
-Description from the paper: if the set of possible relationships is fixed and known, the classification head is more efficient and accurate
-```
-./train_class.sh
+# run Grapher with the classifier edge head
+bash train_class.sh
 ```
 
 ## How to test
-Same logic as for training, just the the scripts are named `test_class.sh` and `test_gen.sh` in each of the script set directories.
-
-
-## Visualize Training Results
-Results can be visualized in Tensorboard
 ```bash
-tensorboard --logdir output --load_fast=false
+# run the test on experiment "webnlg_version_1" using latest checkpoint last.ckpt
+python main.py --run test --version 1 --default_root_dir output --data_path webnlg-dataset/release_v3.0/en
+
+# run the test on experiment "webnlg_version_1" using checkpoint at iteration 5000
+python main.py --run test --version 1 --default_root_dir output --data_path webnlg-dataset/release_v3.0/en --checkpoint_model_id 5000
 ```
 
 ## How to run inference
 ```bash
-# run inference classifier edge head (version 1) or alternatively edge generation head (version 2) using latest checkpoint last.ckpt
-source .env && python3 main.py --run inference --version ${MODEL_VERSION} --default_root_dir ${STORAGE_DRIVE}/data/core/grapher/output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
+# run inference on experiment "webnlg_version_1" using latest checkpoint last.ckpt
+python main.py --run inference --version 1 --default_root_dir output --inference_input_text "Danielle Harris had a main role in Super Capers, a 98 minute long movie."
 ```
 
-
-
+## Results
+Results can be visualized in Tensorboard
+```bash
+tensorboard --logdir output
+```
 
 ### Citation   
 ```
@@ -98,22 +96,10 @@ source .env && python3 main.py --run inference --version ${MODEL_VERSION} --defa
 ```   
 
 # Reproducibility study
-* The scripts ./train_gen and ./train_class.sh both produce an error during execution due to several non-existing arguments passed during the call of main.py (see below).
-```
-main.py: error: unrecognized arguments: --max_epochs 100 --accelerator gpu --num_nodes 1 --num_sanity_val_steps 0 --fast_dev_run 0 --overfit_batches 0 --limit_train_batches 1.0 --limit_val_batches 1.0 --limit_test_batches 1.0 --accumulate_grad_batches 10 --detect_anomaly True --log_every_n_steps 100 --val_check_interval 1000
-```
-
-* Some additional libraries are required, such as `SentencePie`(See below).
-```
-T5Tokenizer requires the SentencePiece library but it was not found in your environment. Checkout the instructions on the installation page of its repo: https://github.com/google/sentencepiece#installation and follow the ones that match your environment. Please note that you may need to restart your runtime after installation.
-```
-
-* Instead of just cloning the two separately needed git repositories corpusreader and WebNLG-Text-to-triples, I added them as submodules (See [Setup](#Setup) section) and included them in gitignore in order to not track the pycache changes.
-
-* I added the parameter cache_dir to point to a directory with enough space, because the model training requires 2950.74 MB for T5.
-
-* I updated two function names and interfaces in litgrapher.py (now called grapher_lightning.py) due to incompatibilities with pytorch_lightning >= 2.0.0:
-```
-validation_epoch_end -> on_validation_epoch_end
-test_epoch_end -> on_test_epoch_end
-```
+* Installed packages as of latest date prior to the last commit
+* Changed default_root_dir and data_path in train_gen.sh and train_class.sh
+* Created .env file to set CUDA related environment variables
+* Change permissions to 700 for train_class.sh and train_gen.sh with chmod
+* Add SLURM parameters to train_gen.sh and train_class.sh so that both scripts can be executed via SLURM
+* Change batch size from 11 to 10, like reported in the paper
+* Changed data workers from 4 to 15 because of the suggestion from Torch's dataloader for our system.
