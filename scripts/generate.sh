@@ -20,7 +20,7 @@ cd src
 if [[ $HARDWARE_SETTING == s* ]]; then
     # Run the inference with sbatch
     if [[ ${NUM_NODES} -gt 1 ]]; then
-        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING}_%A \
+        sbatch --job-name=generate_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING}_%A \
         --partition=${PARTITION} \
         --qos=${QOS} \
         --nodes=${NUM_NODES} \
@@ -32,7 +32,7 @@ if [[ $HARDWARE_SETTING == s* ]]; then
         --mail-user=${USER_MAIL} \
         main.slm "${python_args[@]}"
     else
-        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING}_%A \
+        sbatch --job-name=generate_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING}_%A \
         --partition=${PARTITION} \
         --qos=${QOS} \
         --gres=gpu:${NUM_GPUS_PER_NODE} \

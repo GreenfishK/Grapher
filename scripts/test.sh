@@ -33,7 +33,7 @@ cd src
 # Check if $HARDWARE_SETTING starts with "s" for SLURM
 if [[ $HARDWARE_SETTING == s* ]]; then
     if [[ ${NUM_NODES} -gt 1 ]]; then
-        sbatch --job-name=train_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING}_%A \
+        sbatch --job-name=test_grapher_${MODEL_VARIANT}_${HARDWARE_SETTING}_%A \
         --partition=${PARTITION} \
         --qos=${QOS} \
         --nodes=${NUM_NODES} \
