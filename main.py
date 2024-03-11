@@ -1,12 +1,12 @@
 from data.dataset import GraphDataModule
 from pytorch_lightning import loggers as pl_loggers
-import argparse
 from model.litgrapher import LitGrapher
 import pytorch_lightning as pl
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 import os
 from pytorch_lightning.callbacks import ModelCheckpoint, RichProgressBar
 from misc.utils import decode_graph
+from argparse import ArgumentParser
 
 def main(args):
 
@@ -138,7 +138,7 @@ def main(args):
 if __name__ == "__main__":
     
     # Parsing arguments
-    parser = argparse.ArgumentParser(description='Arguments')
+    parser = ArgumentParser(description='Arguments')
 
     parser.add_argument("--dataset", type=str, default='webnlg')
     parser.add_argument("--run", type=str, default='train')
@@ -163,8 +163,7 @@ if __name__ == "__main__":
     parser.add_argument("--inference_input_text", type=str,
                         default='Danielle Harris had a main role in Super Capers, a 98 minute long movie.')
 
-    parser = pl.Trainer.add_argparse_args(parser)
-
+    #parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
 
     main(args)

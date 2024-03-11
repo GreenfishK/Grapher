@@ -103,3 +103,4 @@ tensorboard --logdir output
 * Add SLURM parameters to train_gen.sh and train_class.sh so that both scripts can be executed via SLURM
 * Change batch size from 11 to 10, like reported in the paper
 * Changed data workers from 4 to 15 because of the suggestion from Torch's dataloader for our system.
+* Remove obsolete argument parsing line which causes an error during argument parsing.
