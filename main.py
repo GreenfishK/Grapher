@@ -140,7 +140,6 @@ if __name__ == "__main__":
     # Parsing arguments
     parser = ArgumentParser(description='Arguments')
 
-    parser.add_argument("--default_root_dir", type=str, default='webnlg')
     parser.add_argument("--dataset", type=str, default='webnlg')
     parser.add_argument("--run", type=str, default='train')
     parser.add_argument('--pretrained_model', type=str, default='t5-large')
@@ -164,7 +163,7 @@ if __name__ == "__main__":
     parser.add_argument("--inference_input_text", type=str,
                         default='Danielle Harris had a main role in Super Capers, a 98 minute long movie.')
 
-    #parser = pl.Trainer.add_argparse_args(parser)
+    parser = pl.Trainer.add_argparse_args(parser)
     args = parser.parse_args()
 
     main(args)
