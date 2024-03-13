@@ -91,7 +91,7 @@ def main(args):
 
         dm = GraphDataModule(tokenizer_class=T5Tokenizer,
                              tokenizer_name=grapher.transformer_name,
-                             cache_dir=grapher.cache_dir,
+                             cache_dir=args.cache_dir,
                              data_path=args.data_path,
                              dataset=args.dataset,
                              batch_size=args.batch_size,
@@ -112,7 +112,7 @@ def main(args):
 
         grapher = LitGrapher.load_from_checkpoint(checkpoint_path=checkpoint_model_path)
 
-        tokenizer = T5Tokenizer.from_pretrained(grapher.transformer_name, cache_dir=grapher.cache_dir)
+        tokenizer = T5Tokenizer.from_pretrained(grapher.transformer_name, cache_dir=args.cache_dir)
         tokenizer.add_tokens('__no_node__')
         tokenizer.add_tokens('__no_edge__')
         tokenizer.add_tokens('__node_sep__')
@@ -140,6 +140,7 @@ if __name__ == "__main__":
     # Parsing arguments
     parser = ArgumentParser(description='Arguments')
 
+    parser.add_argument("--default_root_dir", type=str, default='webnlg')
     parser.add_argument("--dataset", type=str, default='webnlg')
     parser.add_argument("--run", type=str, default='train')
     parser.add_argument('--pretrained_model', type=str, default='t5-large')
