@@ -105,4 +105,4 @@ tensorboard --logdir output
 * Changed data workers from 4 to 15 because of the suggestion from Torch's dataloader for our system.
 * Remove obsolete argument parsing line which causes an error during argument parsing.
 * Add default_root_dir to argument parser
-* Add cache_dir parameter and set set cache_dir to the test execution command
+* Add cache_dir and set the parameter explicitly in the train sripts

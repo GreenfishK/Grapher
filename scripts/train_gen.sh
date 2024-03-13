@@ -13,6 +13,8 @@ cd ../
 . .env
 srun python main.py --version 2\
                   --default_root_dir /gpfs/data/fs72332/fkovacev/data/core/grapher_repro/output \
+                  --data_path /gpfs/data/fs72332/fkovacev/data/core/grapher_repro/webnlg-dataset/release_v3.0/en \
+                  --cache_dir /gpfs/data/fs72332/fkovacev/data/core/cache/grapher \
                   --run train \
                   --max_epochs 100 \
                   --accelerator gpu \
@@ -28,7 +30,6 @@ srun python main.py --version 2\
                   --limit_test_batches 1.0 \
                   --accumulate_grad_batches 10 \
                   --detect_anomaly True \
-                  --data_path /gpfs/data/fs72332/fkovacev/data/core/grapher_repro/webnlg-dataset/release_v3.0/en \
                   --log_every_n_steps 100 \
                   --val_check_interval 1000 \
                   --checkpoint_step_frequency 1000 \

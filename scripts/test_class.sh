@@ -16,5 +16,4 @@ cd ../
 srun python main.py --run test \
                     --version 1 \
                     --default_root_dir /gpfs/data/fs72332/fkovacev/data/core/grapher_repro/output \
-                    --data_path /gpfs/data/fs72332/fkovacev/data/core/grapher_repro/webnlg-dataset/release_v3.0/en \
-                    --cache_dir /gpfs/data/fs72332/fkovacev/data/core/grapher_repro/cache
+                    --data_path /gpfs/data/fs72332/fkovacev/data/core/grapher_repro/webnlg-dataset/release_v3.0/en
