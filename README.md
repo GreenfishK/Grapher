@@ -109,3 +109,4 @@ tensorboard --logdir output
 * Changed data workers from 4 to 15 because of the suggestion from Torch's dataloader for our system.
 * Removed obsolete argument parsing line which causes an error during argument parsing.
 * Added cache_dir and set the parameter explicitly in the train sripts
+* Updated eval_epoch_end to log the evaluation metrics during testing

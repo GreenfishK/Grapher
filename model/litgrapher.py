@@ -5,7 +5,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 import os
 from model.grapher import Grapher
-
+import logging
 
 def sorted_ls(path):
     mtime = lambda f: os.stat(os.path.join(path, f)).st_mtime
@@ -179,6 +179,11 @@ class LitGrapher(pl.LightningModule):
             self.logger.experiment.add_scalar(f'{split}_score/{k}', v, global_step=iteration)
 
         self.log_dict(scores)
+
+        logging.info(f"Validation scores: Precision: {scores['Precision']}; Recall: {scores['Recall']}; F1: {scores['F1']}")
+        self.log('Precision', scores['Precision'], sync_dist=True)
+        self.log('Recall', scores['Recall'], sync_dist=True)
+        self.log('F1', scores['F1'], sync_dist=True)
 
     def validation_step(self, batch, batch_idx):
         return self.eval_step(batch, batch_idx, 'valid')
