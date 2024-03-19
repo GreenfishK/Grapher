@@ -1,6 +1,6 @@
 import torch
 import networkx as nx
-from WebNLG_Text_to_triples import Evaluation_script_json
+from src.WebNLG_Text_to_triples import Evaluation_script_json
 import os
 from misc.rdf import save_webnlg_rdf
 import json
