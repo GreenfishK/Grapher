@@ -98,13 +98,14 @@ tensorboard --logdir output
 ```   
 
 # Reproducibility study
+* Added external repositories as submodules instead of cloning them
+* Added gitignore to ignore the changes in the submodules Corpusreader and WebNLG_Text_to_triples
 * Installed packages as of latest date prior to the last commit
 * Changed default_root_dir and data_path in train_gen.sh and train_class.sh
 * Created .env file to set CUDA related environment variables
-* Change permissions to 700 for train_class.sh and train_gen.sh with chmod
-* Add SLURM parameters to train_gen.sh and train_class.sh so that both scripts can be executed via SLURM
-* Change batch size from 11 to 10, like reported in the paper
+* Changed permissions to 700 for train_class.sh and train_gen.sh with chmod
+* Added SLURM parameters to train_gen.sh and train_class.sh so that both scripts can be executed via SLURM
+* Changed batch size from 11 to 10, like reported in the paper
 * Changed data workers from 4 to 15 because of the suggestion from Torch's dataloader for our system.
-* Remove obsolete argument parsing line which causes an error during argument parsing.
-* Add cache_dir and set the parameter explicitly in the train sripts
-* Add gitignore to ignore the changes in the submodules Corpusreader and WebNLG_Text_to_triples
+* Removed obsolete argument parsing line which causes an error during argument parsing.
+* Added cache_dir and set the parameter explicitly in the train sripts
