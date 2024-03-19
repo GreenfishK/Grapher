@@ -37,11 +37,13 @@ git clone git@github.com:IBM/Grapher.git
 # navigate to the directory
 cd Grapher
 
-# clone an external repository for reading the data
-git clone https://gitlab.com/webnlg/corpus-reader.git corpusreader
+# Add an external repository as submodule for reading the data
+git submodule add https://gitlab.com/webnlg/corpus-reader.git corpusreader
 
-# clone another external repositories for scoring the results
-git clone https://github.com/WebNLG/WebNLG-Text-to-triples.git src/WebNLG_Text_to_triples
+# Add an external repository as submodule for scoring the results
+mkdir src
+cd src
+git clone https://github.com/WebNLG/WebNLG-Text-to-triples.git WebNLG_Text_to_triples
  ```   
 ## Data
 
@@ -105,3 +107,4 @@ tensorboard --logdir output
 * Changed data workers from 4 to 15 because of the suggestion from Torch's dataloader for our system.
 * Remove obsolete argument parsing line which causes an error during argument parsing.
 * Add cache_dir and set the parameter explicitly in the train sripts
+* Add gitignore to ignore the changes in the submodules Corpusreader and WebNLG_Text_to_triples
