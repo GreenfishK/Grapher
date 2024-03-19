@@ -41,7 +41,7 @@ cd Grapher
 git clone https://gitlab.com/webnlg/corpus-reader.git corpusreader
 
 # clone another external repositories for scoring the results
-git clone https://github.com/WebNLG/WebNLG-Text-to-triples.git WebNLG_Text_to_triples
+git clone https://github.com/WebNLG/WebNLG-Text-to-triples.git src/WebNLG_Text_to_triples
  ```   
 ## Data
 
