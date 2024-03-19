@@ -4,4 +4,5 @@ src/data/webnlg/__pycache__/
 src/misc/__pycache__/
 src/engines/__pycache__/
 src/tasks/__pycache__/
+corpusreader/
 .env
