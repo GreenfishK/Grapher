@@ -40,7 +40,7 @@ Install dependencies
 git clone git@github.com:GreenfishK/Grapher.git
 
 # clone another external repositories for scoring the results
-cd cd Grapher/src
+cd Grapher/src
 git submodule add https://github.com/WebNLG/WebNLG-Text-to-triples.git WebNLG_Text_to_triples
  ```
 
