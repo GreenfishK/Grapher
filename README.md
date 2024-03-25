@@ -108,3 +108,4 @@ tensorboard --logdir output
 * Removed obsolete argument parsing line which causes an error during argument parsing.
 * Added cache_dir and set the parameter explicitly in the train sripts
 * Updated eval_epoch_end to log the evaluation metrics during testing
+* Add GPU-enabling arguments "accelerators" and "devices" to test scripts
