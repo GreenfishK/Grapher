@@ -1,5 +1,5 @@
 [submodule "WebNLG_Text_to_triples"]
-	path = src/WebNLG_Text_to_triples
+	path = WebNLG_Text_to_triples
 	url = https://github.com/WebNLG/WebNLG-Text-to-triples.git
 	ignore = dirty
 
